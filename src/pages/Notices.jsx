@@ -137,7 +137,7 @@ export default function Notices() {
             <div style={{ fontSize: 14, color: '#6b7a90', fontWeight: 700 }}>
               {isMain ? 'No notices sent yet' : 'No notice history yet'}
             </div>
-            {!isMain && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Notices sent to you will appear here after you read them</div>
+            {!isMain && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Notices sent to you will appear here after you read them</div>}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
