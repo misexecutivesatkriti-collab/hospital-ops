@@ -35,12 +35,30 @@ const PAGE_TITLES = {
 
 export default function AppLayout() {
   const { currentRole, currentUser, logout, inactivityPct, inactivityWarning, inactivitySeconds, showSessionModal, continueSession } = useAuth();
-  const { isSaving } = useAppForSaving();
+  const { isSaving, notices, save } = useAppForSaving();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showNotifDrop, setShowNotifDrop] = useState(false);
+  const [activeNotice, setActiveNotice] = useState(null);
 
   if (!currentRole) return <Navigate to="/login" replace />;
+
+  const isMain = currentRole === 'mainadmin';
+  const myUnread = isMain ? [] : (notices || []).filter(n => n.toEmpId === currentUser?.empId && !n.isRead);
+
+  async function openNotice(n) {
+    setShowNotifDrop(false);
+    setActiveNotice(n);
+    if (!n.isRead) {
+      await save('hops-notices', (notices || []).map(x => x.id === n.id ? { ...x, isRead: true } : x));
+    }
+  }
+
+  function fDate(iso) {
+    if (!iso) return '';
+    try { return new Date(iso).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch { return iso; }
+  }
 
   const pageTitle = PAGE_TITLES[location.pathname] || 'Hospital Ops';
 
@@ -84,11 +102,96 @@ export default function AppLayout() {
                 <span style={{ fontSize: 11, color: '#0d7377', fontWeight: 800 }}>Saving...</span>
               </div>
             )}
+
+            {/* Notice bell — only for non-mainadmin */}
+            {!isMain && (
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowNotifDrop(s => !s)}
+                  style={{ position: 'relative', width: 36, height: 36, borderRadius: 9, border: '1px solid #d8e2ef', background: myUnread.length > 0 ? '#fff7ed' : '#f3f7fc', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>
+                  🔔
+                  {myUnread.length > 0 && (
+                    <span style={{ position: 'absolute', top: -5, right: -5, background: '#ef4444', color: 'white', fontSize: 9, fontWeight: 800, borderRadius: 20, padding: '1px 5px', minWidth: 16, textAlign: 'center', border: '2px solid white' }}>
+                      {myUnread.length}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifDrop && (
+                  <>
+                    <div onClick={() => setShowNotifDrop(false)} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
+                    <div style={{ position: 'absolute', top: 44, right: 0, width: 320, background: 'white', borderRadius: 12, border: '1px solid #e0e8f0', boxShadow: '0 8px 32px rgba(11,30,61,0.14)', zIndex: 999, overflow: 'hidden' }}>
+                      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, fontWeight: 700, color: '#0b1e3d' }}>📬 Notices</span>
+                        <span style={{ fontSize: 11, color: '#6b7a90', fontWeight: 600 }}>{myUnread.length} unread</span>
+                      </div>
+                      {myUnread.length === 0 ? (
+                        <div style={{ padding: '28px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>No new notices</div>
+                      ) : (
+                        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                          {myUnread.map(n => (
+                            <button key={n.id} onClick={() => openNotice(n)}
+                              style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', borderBottom: '1px solid #f0f4f8', background: '#fafcff', cursor: 'pointer', display: 'block' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
+                              onMouseLeave={e => e.currentTarget.style.background = '#fafcff'}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                                <span style={{ fontSize: 9, fontWeight: 800, color: '#1d4ed8', background: '#dbeafe', padding: '2px 7px', borderRadius: 20 }}>NEW</span>
+                                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{fDate(n.sentAt)}</span>
+                              </div>
+                              <div style={{ fontSize: 13, fontWeight: 800, color: '#0b1e3d', marginBottom: 2 }}>{n.subject}</div>
+                              <div style={{ fontSize: 11, color: '#6b7a90', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.message}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ padding: '10px 16px', borderTop: '1px solid #f0f4f8' }}>
+                        <button onClick={() => { setShowNotifDrop(false); navigate('/notices'); }}
+                          style={{ width: '100%', padding: '7px', borderRadius: 7, background: '#f0f7ff', color: '#0d7377', border: '1px solid #cce0f0', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>
+                          📋 View Notice History
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <div style={{ fontSize: 12, color: '#6b7a90', fontWeight: 600, background: '#f3f7fc', padding: '5px 10px', borderRadius: 7, border: '1px solid #d8e2ef' }}>
               {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })}
             </div>
           </div>
         </div>
+
+        {/* Notice detail modal */}
+        {activeNotice && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <div style={{ background: 'white', borderRadius: 16, maxWidth: 460, width: '100%', boxShadow: '0 16px 60px rgba(0,0,0,0.25)', overflow: 'hidden' }}>
+              <div style={{ background: 'linear-gradient(135deg,#0d7377,#0b5e62)', padding: '18px 22px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.65)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>
+                    {activeNotice.type === 'task_reminder' ? '⏰ Task Reminder' : '📋 Notice'} · From: {activeNotice.fromName}
+                  </div>
+                  <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, color: 'white', fontWeight: 700 }}>{activeNotice.subject}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>{fDate(activeNotice.sentAt)}</div>
+                </div>
+                <button onClick={() => setActiveNotice(null)}
+                  style={{ width: 28, height: 28, borderRadius: 7, border: 'none', background: 'rgba(255,255,255,0.15)', color: 'white', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+              </div>
+              <div style={{ padding: '20px 22px' }}>
+                <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{activeNotice.message}</div>
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #f0f4f8', display: 'flex', gap: 8 }}>
+                  <button onClick={() => setActiveNotice(null)}
+                    style={{ flex: 1, padding: '9px', borderRadius: 8, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
+                    ✓ Got It
+                  </button>
+                  <button onClick={() => { setActiveNotice(null); navigate('/notices'); }}
+                    style={{ flex: 1, padding: '9px', borderRadius: 8, background: 'transparent', color: '#0d7377', border: '1.5px solid #0d7377', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
+                    📋 View History
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isSaving && <div className="hops-save-bar" />}
 

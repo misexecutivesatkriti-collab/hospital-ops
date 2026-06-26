@@ -59,7 +59,7 @@ export default function Notices() {
     await save('hops-notices', notices.map(n => n.toEmpId === currentUser?.empId ? { ...n, isRead: true } : n));
   }
 
-  // Filter notices for current user
+  // Employees see full history (all received). Mainadmin sees sent history.
   const myNotices = isMain
     ? notices.filter(n => n.fromName === (currentUser?.name || 'MAIN ADMIN') || n.fromName === 'MAIN ADMIN').sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt))
     : notices.filter(n => n.toEmpId === currentUser?.empId).sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
@@ -123,28 +123,21 @@ export default function Notices() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
           <div>
             <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: '#0b1e3d', marginBottom: 2 }}>
-              {isMain ? '📤 Sent Notices' : '📬 My Notices'}
-              {!isMain && unreadCount > 0 && (
-                <span style={{ marginLeft: 10, background: '#ef4444', color: 'white', fontSize: 11, fontWeight: 800, padding: '2px 9px', borderRadius: 20 }}>{unreadCount} new</span>
-              )}
+              {isMain ? '📤 Sent Notices' : '📋 Notice History'}
             </h2>
             <div style={{ fontSize: 12, color: '#6b7a90' }}>
-              {isMain ? `${myNotices.length} notice(s) sent` : `${myNotices.length} notice(s) received`}
+              {isMain ? `${myNotices.length} notice(s) sent` : `${myNotices.length} notice(s) total · ${unreadCount} unread`}
             </div>
           </div>
-          {!isMain && unreadCount > 0 && (
-            <button onClick={markAllRead} style={{ padding: '7px 14px', borderRadius: 8, background: '#f0f7ff', color: '#0d7377', border: '1px solid #cce0f0', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>
-              ✓ Mark All Read
-            </button>
-          )}
         </div>
 
         {myNotices.length === 0 ? (
           <div style={{ background: 'white', borderRadius: 14, border: '1px solid #e0e8f0', padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
             <div style={{ fontSize: 14, color: '#6b7a90', fontWeight: 700 }}>
-              {isMain ? 'No notices sent yet' : 'No notices received'}
+              {isMain ? 'No notices sent yet' : 'No notice history yet'}
             </div>
+            {!isMain && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>Notices sent to you will appear here after you read them</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
