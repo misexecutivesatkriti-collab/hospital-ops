@@ -127,20 +127,16 @@ export default function AppLayout() {
                       {myUnread.length === 0 ? (
                         <div style={{ padding: '28px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>No new notices</div>
                       ) : (
-                        <div style={{ maxHeight: 320, overflowY: 'auto' }}>
-                          {myUnread.map(n => (
-                            <button key={n.id} onClick={() => openNotice(n)}
-                              style={{ width: '100%', textAlign: 'left', padding: '12px 16px', border: 'none', borderBottom: '1px solid #f0f4f8', background: '#fafcff', cursor: 'pointer', display: 'block' }}
-                              onMouseEnter={e => e.currentTarget.style.background = '#f0f7ff'}
-                              onMouseLeave={e => e.currentTarget.style.background = '#fafcff'}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                                <span style={{ fontSize: 9, fontWeight: 800, color: '#1d4ed8', background: '#dbeafe', padding: '2px 7px', borderRadius: 20 }}>NEW</span>
-                                <span style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{fDate(n.sentAt)}</span>
-                              </div>
-                              <div style={{ fontSize: 13, fontWeight: 800, color: '#0b1e3d', marginBottom: 2 }}>{n.subject}</div>
-                              <div style={{ fontSize: 11, color: '#6b7a90', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{n.message}</div>
-                            </button>
-                          ))}
+                        <div style={{ padding: '20px 16px', textAlign: 'center' }}>
+                          <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#fff7ed', border: '2px solid #fed7aa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, margin: '0 auto 12px' }}>🔔</div>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#0b1e3d', marginBottom: 6 }}>
+                            You have {myUnread.length} new notice{myUnread.length > 1 ? 's' : ''}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#6b7a90', marginBottom: 14 }}>Click below to view your notices</div>
+                          <button onClick={() => { setShowNotifDrop(false); openNotice(myUnread[0]); }}
+                            style={{ width: '100%', padding: '9px', borderRadius: 8, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
+                            📨 View Notice
+                          </button>
                         </div>
                       )}
                       <div style={{ padding: '10px 16px', borderTop: '1px solid #f0f4f8' }}>
@@ -384,7 +380,6 @@ function SidebarMenu({ currentPath, onNavigate, mobileOpen, onMobileClose, curre
             {!isMain && <>
               <Group label="MY WORK" />
               <NavItem id="my-tasks" label="My Tasks" icon="📋" badge="myTasks" />
-              <NavItem id="notices" label="Notices" icon="📨" badge="notices" />
               <NavItem id="my-handover" label="Incoming Handovers" icon="📥" />
             </>}
 
@@ -401,7 +396,6 @@ function SidebarMenu({ currentPath, onNavigate, mobileOpen, onMobileClose, curre
             {(isMain || hasPerm('tracking_view')) && <NavItem id="tracking" label="Live Tracking" icon="📈" />}
             {isMain && <>
               <Group label="MAIN ADMIN" />
-              <NavItem id="notices" label="Notices" icon="📨" />
               <NavItem id="activity" label="Activity Log" icon="📜" />
               <NavItem id="mis" label="MIS Reporting" icon="📑" />
             </>}
@@ -418,7 +412,6 @@ function SidebarMenu({ currentPath, onNavigate, mobileOpen, onMobileClose, curre
           {isStaff && <>
             <Group label="MY WORK" />
             <NavItem id="my-tasks" label="My Tasks" icon="✅" badge="myTasks" />
-            <NavItem id="notices" label="Notices" icon="📨" badge="notices" />
             <NavItem id="assign-task" label="Assign Task" icon="📋" />
             <NavItem id="my-handover" label="Incoming Handovers" icon="📥" />
             <NavItem id="my-delegation" label="My Delegations" icon="📤" badge="myDelegation" />
