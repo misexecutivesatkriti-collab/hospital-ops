@@ -124,7 +124,7 @@ export function AuthProvider({ children }) {
 
   const adminLogin = useCallback(
     (username, password) => {
-      if (!username || !password) return { ok: false, error: '❌ Username aur password daalein!' };
+      if (!username || !password) return { ok: false, error: '❌ Please enter your username and password.' };
       if (
         username.toUpperCase() === MAIN_ADMIN_USER.toUpperCase() &&
         (password === MAIN_ADMIN_PASS || password.trim() === MAIN_ADMIN_PASS)
@@ -142,7 +142,7 @@ export function AuthProvider({ children }) {
 
   const staffLogin = useCallback(
     (nameRaw, password, employees) => {
-      if (!nameRaw || !password) return { ok: false, error: '❌ Username aur password daalein!' };
+      if (!nameRaw || !password) return { ok: false, error: '❌ Please enter your username and password.' };
       const nUp = nameRaw.toUpperCase();
       const emp = employees.find((e) => {
         const nameMatch = e.name === nUp || e.name === nameRaw;
