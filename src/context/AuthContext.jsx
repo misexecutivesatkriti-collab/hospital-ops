@@ -107,19 +107,20 @@ export function AuthProvider({ children }) {
 
     if (currentRole === 'staff' && permsArray.length > 0) {
       // Staff employee just got permissions — promote to admin role live
-      const updatedUser = { ...currentUser, perms: newPermsObj };
+      const updatedUser = { ...currentUser, perms: newPermsObj, dept: emp.dept };
       setCurrentRole('admin');
       setCurrentUser(updatedUser);
       ls.set('hops-session', { role: 'admin', user: updatedUser });
       return;
     }
 
-    if (currentRole === 'admin') {
-      if (JSON.stringify(newPermsObj) === JSON.stringify(currentUser.perms || {})) return;
-      const updatedUser = { ...currentUser, perms: newPermsObj };
-      setCurrentUser(updatedUser);
-      ls.set('hops-session', { role: 'admin', user: updatedUser });
-    }
+    const permsChanged = JSON.stringify(newPermsObj) !== JSON.stringify(currentUser.perms || {});
+    const deptChanged = emp.dept !== currentUser.dept;
+    if (!permsChanged && !deptChanged) return;
+
+    const updatedUser = { ...currentUser, perms: newPermsObj, dept: emp.dept };
+    setCurrentUser(updatedUser);
+    ls.set('hops-session', { role: currentRole, user: updatedUser });
   }, [currentRole, currentUser]);
 
   const adminLogin = useCallback(

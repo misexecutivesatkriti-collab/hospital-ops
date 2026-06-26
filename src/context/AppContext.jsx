@@ -167,9 +167,10 @@ export function AppProvider({ children }) {
 
       ls.set(key, fresh);
       dispatch({ type: 'SET_KEY', key: stateKey, value: fresh });
+      if (key === 'hops-employees') refreshPermsFromEmployees(fresh);
     });
     return cleanup;
-  }, []);
+  }, [refreshPermsFromEmployees]);
 
   // Auto-cycle: detect date change mid-session (e.g. browser kept open overnight)
   useEffect(() => {
