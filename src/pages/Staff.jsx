@@ -96,7 +96,7 @@ export default function Staff() {
               </div>
             )}
           </div>
-        )) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="👥" message="KOI EMPLOYEES NAHI" /></div>}
+        )) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="👥" message="NO EMPLOYEES FOUND" /></div>}
       </div>
       <Pagination {...paged} onPage={(p) => setPage(p)} />
 

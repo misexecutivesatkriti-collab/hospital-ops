@@ -48,7 +48,7 @@ export default function Escalation() {
             </div>
             {i.desc && <div style={{ marginTop: 8, fontSize: 12, color: '#1a2535', background: '#fde8e8', padding: '7px 11px', borderRadius: 8 }}>{i.desc}</div>}
           </div>
-        )) : <EmptyState icon="🎉" message="KOI ESCALATION NAHI — SAB CLEAR!" />}
+        )) : <EmptyState icon="🎉" message="NO ESCALATIONS — ALL CLEAR!" />}
       </div>
     </div>
   );

@@ -104,7 +104,7 @@ export default function AppLayout() {
       </div>
       {inactivityWarning && !showSessionModal && (
         <div style={{ position: 'fixed', bottom: 14, right: 14, background: '#1a2535', color: 'white', padding: '10px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', borderLeft: '3px solid #d4920a' }}>
-          ⏰ {inactivitySeconds} second mein session expire — kuch click karein!
+          ⏰ Session expires in {inactivitySeconds} seconds — please click something!
         </div>
       )}
 
@@ -112,13 +112,13 @@ export default function AppLayout() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: 'white', borderRadius: 16, padding: '32px 28px', maxWidth: 380, width: '90%', boxShadow: '0 12px 50px rgba(0,0,0,0.3)', textAlign: 'center' }}>
             <div style={{ fontSize: 42, marginBottom: 12 }}>⏰</div>
-            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: '#0b1e3d', marginBottom: 8, fontWeight: 700 }}>Session Expire Ho Gayi</div>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: '#0b1e3d', marginBottom: 8, fontWeight: 700 }}>Session Expired</div>
             <div style={{ fontSize: 13, color: '#6b7a90', marginBottom: 24, lineHeight: 1.6 }}>
-              5 minute se koi activity nahi thi.<br />
-              Kya aap <strong style={{ color: '#0d7377' }}>continue</strong> karna chahte hain<br />ya <strong style={{ color: '#c0392b' }}>logout</strong> karna chahte hain?
+              No activity detected for 5 minutes.<br />
+              Would you like to <strong style={{ color: '#0d7377' }}>continue</strong><br />or <strong style={{ color: '#c0392b' }}>log out</strong>?
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button onClick={continueSession} style={{ padding: '10px 26px', borderRadius: 9, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, boxShadow: '0 2px 8px rgba(13,115,119,0.3)' }}>✅ Continue Karein</button>
+              <button onClick={continueSession} style={{ padding: '10px 26px', borderRadius: 9, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, boxShadow: '0 2px 8px rgba(13,115,119,0.3)' }}>✅ Continue</button>
               <button onClick={logout} style={{ padding: '10px 26px', borderRadius: 9, background: 'transparent', color: '#c0392b', border: '2px solid #c0392b', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>⬅ Logout</button>
             </div>
           </div>
@@ -556,7 +556,7 @@ function HandoverRequestToast({ handover: hv, createdAt, onDismiss, isDark, inde
                   {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: titleColor, lineHeight: 1.3 }}>
-                  {hv.fromName} ne tasks handover kiye hain
+                  {hv.fromName} has handed over tasks to you
                 </div>
               </div>
             </div>
@@ -602,7 +602,7 @@ function HandoverResponseToast({ handover: hv, createdAt, onDismiss, isDark, ind
                   {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 800, color: accepted ? titleColor : (isDark ? '#fca5a5' : '#991b1b'), lineHeight: 1.3 }}>
-                  {hv.toName} ne handover {accepted ? 'accept' : 'reject'} kar diya
+                  {hv.toName} has {accepted ? 'accepted' : 'rejected'} the handover
                 </div>
               </div>
             </div>

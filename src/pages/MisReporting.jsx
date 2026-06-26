@@ -340,7 +340,7 @@ export default function MisReporting() {
                       <td style={{ ...TD, fontWeight: 800, color: scoreColor(score) }}>{scoreEmoji(score)} {scoreLabel(score)}</td>
                     </tr>
                   ))}
-                  {!empStats.length && <tr><td colSpan={10} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>Koi employee data nahi</td></tr>}
+                  {!empStats.length && <tr><td colSpan={10} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>No employee data available</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -393,7 +393,7 @@ export default function MisReporting() {
                   const n = (t.extensions || []).length;
                   return { label: t.name, value: n, display: `${n}/3`, color: n >= 3 ? '#c0392b' : n > 0 ? '#d4920a' : '#1a7a4a' };
                 })} />
-              ) : <div style={{ color: '#6b7a90', fontSize: 12 }}>Koi delegation task nahi</div>}
+              ) : <div style={{ color: '#6b7a90', fontSize: 12 }}>No delegation tasks</div>}
             </div>
           </div>
 
@@ -438,7 +438,7 @@ export default function MisReporting() {
                       </tr>
                     );
                   }) : (
-                    <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: '#6b7a90' }}>Koi delegation task nahi hai abhi tak</td></tr>
+                    <tr><td colSpan={8} style={{ padding: 32, textAlign: 'center', color: '#6b7a90' }}>No delegation tasks yet</td></tr>
                   )}
                 </tbody>
               </table>
@@ -591,7 +591,7 @@ export default function MisReporting() {
                           </tr>
                         );
                       }) : (
-                      <tr><td colSpan={9} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>Koi handover records nahi hain</td></tr>
+                      <tr><td colSpan={9} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>No handover records found</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -652,7 +652,7 @@ export default function MisReporting() {
                       <td style={{ ...TD, fontWeight: 800, color: scoreColor(s.healthScore) }}>{scoreEmoji(s.healthScore)} {scoreLabel(s.healthScore)}</td>
                     </tr>
                   ))}
-                  {!deptStats.length && <tr><td colSpan={11} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>Koi department nahi</td></tr>}
+                  {!deptStats.length && <tr><td colSpan={11} style={{ padding: 28, textAlign: 'center', color: '#6b7a90' }}>No departments found</td></tr>}
                 </tbody>
               </table>
             </div>

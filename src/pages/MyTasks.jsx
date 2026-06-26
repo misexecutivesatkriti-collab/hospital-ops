@@ -73,7 +73,7 @@ function ExtensionRequestModal({ task, open, onClose, onSubmit }) {
 
   return (
     <Modal open={open} onClose={onClose} title="🔄 Request Extension" maxWidth="max-w-md">
-      <Alert variant="blue">Extension request jaega admin ke paas approval ke liye. Max 3 extensions allowed.</Alert>
+      <Alert variant="blue">Extension request will be sent to admin for approval. Maximum 3 extensions allowed.</Alert>
       <div style={{ background: '#f8fbff', border: '1px solid #d8e2ef', borderRadius: 8, padding: '10px 13px', marginBottom: 14 }}>
         <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{task.name}</div>
         <div style={{ fontSize: 12, color: '#6b7a90' }}>📅 Current Due Date: <strong style={{ color: '#0d7377' }}>{fDate(task.schedDate)}</strong></div>
@@ -375,7 +375,7 @@ export default function MyTasks() {
                 <button onClick={() => setShowDone(t)} style={{ padding: '7px 16px', borderRadius: 8, background: '#1a7a4a', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>✅ Mark Done</button>
               </div>
             </div>
-          )) : <EmptyState icon="✅" message="KOI PENDING TASK NAHI — SAB DONE!" />}
+          )) : <EmptyState icon="✅" message="NO PENDING TASKS — ALL DONE!" />}
           <Pagination {...paged} onPage={(p) => setPage(p)} />
         </div>
       )}
@@ -414,13 +414,13 @@ export default function MyTasks() {
                         {x.status !== 'pending' && <span style={{ color: '#6b7a90', fontSize: 10 }}>({x.status} by {x.respondedBy})</span>}
                       </div>
                     ))}
-                    {hasPendingExt && <div style={{ marginTop: 5, fontSize: 11, color: '#92400e', fontWeight: 700 }}>⏳ Extension approval pending hai admin se</div>}
+                    {hasPendingExt && <div style={{ marginTop: 5, fontSize: 11, color: '#92400e', fontWeight: 700 }}>⏳ Extension approval pending from admin</div>}
                   </div>
                 )}
                 <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {isActivelyGivenAway ? (
                     <span style={{ padding: '7px 14px', borderRadius: 8, background: '#fef3c7', color: '#92400e', fontSize: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                      🔒 Handover Active — {givenAwayInfo?.toName} complete karega
+                      🔒 Handover Active — {givenAwayInfo?.toName} will complete this
                     </span>
                   ) : (
                     <button onClick={() => setShowDone(t)} style={{ padding: '7px 16px', borderRadius: 8, background: '#1a7a4a', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>✅ Mark Done</button>
@@ -437,7 +437,7 @@ export default function MyTasks() {
                 </div>
               </div>
             );
-          }) : <EmptyState icon="📤" message="KOI PENDING DELEGATION NAHI" />}
+          }) : <EmptyState icon="📤" message="NO PENDING DELEGATIONS" />}
           <Pagination {...paged} onPage={(p) => setPage(p)} />
         </div>
       )}
@@ -476,14 +476,14 @@ export default function MyTasks() {
                 {hoverToMe && (
                   <div style={{ marginTop: 8, fontSize: 11.5, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 7, padding: '7px 11px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <span>📥 Assigned to <strong>{hoverToMe.fromName}</strong> by <strong>{t.createdBy && t.createdBy !== 'SYSTEM' ? t.createdBy : '—'}</strong></span>
-                    <span>→ <strong>{hoverToMe.fromName}</strong> ne aapko handover diya</span>
+                    <span>→ <strong>{hoverToMe.fromName}</strong> handed over to you</span>
                     <span style={{ color: '#6b7a90' }}>📅 {fDate(hoverToMe.dateStart)} → {fDate(hoverToMe.dateEnd)}</span>
                   </div>
                 )}
                 {hoverFromMe && (
                   <div style={{ marginTop: 8, fontSize: 11.5, background: '#fffbeb', border: '1px solid #f5c842', borderRadius: 7, padding: '7px 11px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <span>📤 Aapne <strong>{hoverFromMe.toName}</strong> ko handover diya tha</span>
-                    <span>→ <strong>{t.doneBy}</strong> ne complete kiya</span>
+                    <span>📤 You handed over to <strong>{hoverFromMe.toName}</strong></span>
+                    <span>→ <strong>{t.doneBy}</strong> completed this</span>
                     <span style={{ color: '#6b7a90' }}>📅 {fDate(hoverFromMe.dateStart)} → {fDate(hoverFromMe.dateEnd)}</span>
                   </div>
                 )}
@@ -495,22 +495,22 @@ export default function MyTasks() {
                 )}
                 <div style={{ marginTop: 8, fontSize: 12, background: delayed ? '#faf5ff' : '#d4edda', padding: '8px 11px', borderRadius: 7 }}>
                   ✅ Done by <strong>{t.doneBy}</strong>{t.lastDone ? ' on ' + fDate(t.lastDone) : ''}
-                  {hoverToMe && t.doneBy !== currentUser.name && <span style={{ color: '#155724', fontWeight: 700 }}> (Handover se)</span>}
+                  {hoverToMe && t.doneBy !== currentUser.name && <span style={{ color: '#155724', fontWeight: 700 }}> (via Handover)</span>}
                   {delayed && t.delayReason && <div style={{ color: '#6d28d9', marginTop: 4 }}>⏰ {t.delayReason}</div>}
                 </div>
               </div>
             );
-          }) : <EmptyState icon="📋" message="KOI TASK NAHI" />}
+          }) : <EmptyState icon="📋" message="NO TASKS FOUND" />}
           <Pagination {...paged} onPage={(p) => setPage(p)} />
         </div>
       )}
 
       {tab === 'handover' && (
         <div>
-          {/* Handover From — tasks mujhe mili hain */}
+          {/* Handover From — tasks received by me */}
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#0b1e3d', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-              📥 Handover From — Mujhe Mili Hain
+              📥 Handover From — Received by Me
               <span style={{ background: '#1a7a4a', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '2px 8px' }}>{handoverFromTasks.length}</span>
             </div>
             {paged.items.length ? paged.items.map((t) => {
@@ -538,14 +538,14 @@ export default function MyTasks() {
                   </div>
                 </div>
               );
-            }) : <div style={{ background: 'white', borderRadius: 10, border: '1px solid #d8e2ef', padding: '20px', textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>📭 Koi handover nahi mili abhi</div>}
+            }) : <div style={{ background: 'white', borderRadius: 10, border: '1px solid #d8e2ef', padding: '20px', textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>📭 No handovers received yet</div>}
             <Pagination {...paged} onPage={(p) => setPage(p)} />
           </div>
 
-          {/* Handover To — tasks maine di hain */}
+          {/* Handover To — tasks given by me */}
           <div>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#0b1e3d', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-              📤 Handover To — Maine Di Hain
+              📤 Handover To — Given by Me
               <span style={{ background: '#d4920a', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '2px 8px' }}>{handoverToList.length}</span>
             </div>
             {handoverToList.length ? handoverToList.map((h) => {
@@ -581,7 +581,7 @@ export default function MyTasks() {
                   )}
                 </div>
               );
-            }) : <div style={{ background: 'white', borderRadius: 10, border: '1px solid #d8e2ef', padding: '20px', textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>📭 Aapne koi handover nahi di abhi</div>}
+            }) : <div style={{ background: 'white', borderRadius: 10, border: '1px solid #d8e2ef', padding: '20px', textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>📭 No handovers given yet</div>}
           </div>
         </div>
       )}

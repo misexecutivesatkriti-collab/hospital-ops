@@ -61,7 +61,7 @@ export default function MyDelegations() {
               {d.status === 'extension-requested' && <span style={{ fontSize: 11, color: '#6d28d9', fontWeight: 700 }}>⏳ Awaiting admin approval...</span>}
             </div>
           </div>
-        )) : <EmptyState icon="📤" message="KOI DELEGATIONS NAHI" />}
+        )) : <EmptyState icon="📤" message="NO DELEGATIONS FOUND" />}
       </div>
 
       <Modal open={!!showExtModal} onClose={() => setShowExtModal(null)} title="Request Extension">

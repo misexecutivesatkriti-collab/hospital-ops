@@ -14,8 +14,8 @@ export function DateRangeExportModal({ open, onClose, onExport, title = 'Export 
   const [err, setErr] = useState('');
 
   function handleExport() {
-    if (!from || !to) { setErr('Dono dates fill karein'); return; }
-    if (from > to) { setErr('"From" date "To" date se pehle honi chahiye'); return; }
+    if (!from || !to) { setErr('Please fill in both dates'); return; }
+    if (from > to) { setErr('From date must be before To date'); return; }
     setErr('');
     onExport(from, to);
     onClose();
@@ -29,7 +29,7 @@ export function DateRangeExportModal({ open, onClose, onExport, title = 'Export 
   return (
     <Modal open={open} onClose={handleClose} title={`📊 ${title}`} maxWidth="max-w-sm">
       <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, padding: '10px 13px', marginBottom: 14, fontSize: 12, color: '#0369a1' }}>
-        Date range ke according data filter hokar Excel mein export hoga.
+        Data will be filtered by date range and exported to Excel.
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <Field label="From Date *">

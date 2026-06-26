@@ -38,7 +38,7 @@ export default function Issues() {
     ? employees.filter(e => e.dept === form.dept)
     : [];
 
-  // Resolve button: sirf mainadmin ya specifically assigned employee ko
+  // Resolve button: only mainadmin or the specifically assigned employee
   function canResolveIssue(issue) {
     if (currentRole === 'mainadmin') return true;
     return (issue.assigned || '').toUpperCase() === currentUser.name.toUpperCase();
@@ -134,7 +134,7 @@ export default function Issues() {
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {canResolveIssue(i) && i.status !== 'resolved' && <button onClick={() => { setShowResolve(i); setResBy(currentUser.name); }} style={{ padding: '4px 10px', borderRadius: 7, background: '#1a7a4a', color: 'white', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800 }}>✅ Resolve</button>}
                       {canResolveIssue(i) && i.status === 'open' && <button onClick={() => progressIssue(i.id)} style={{ padding: '4px 8px', borderRadius: 7, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800 }}>▶</button>}
-                      {canDel && <button onClick={async () => { if (confirm('Trash mein move karein?')) await moveToTrash('issue', i.id); }} style={{ background: 'none', border: '1px solid #d8e2ef', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12, color: '#c0392b' }}>🗑️</button>}
+                      {canDel && <button onClick={async () => { if (confirm('Move to Trash?')) await moveToTrash('issue', i.id); }} style={{ background: 'none', border: '1px solid #d8e2ef', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 12, color: '#c0392b' }}>🗑️</button>}
                     </div>
                   </td>
                 </tr>
@@ -175,7 +175,7 @@ export default function Issues() {
                 ))}
               </select>
             ) : (
-              <input value={form.assigned} onChange={(e) => setForm({ ...form, assigned: e.target.value })} placeholder={form.dept ? 'Koi employee nahi mila' : 'Pehle dept select karein'} style={IS} />
+              <input value={form.assigned} onChange={(e) => setForm({ ...form, assigned: e.target.value })} placeholder={form.dept ? 'No employees found' : 'Select a department first'} style={IS} />
             )}
           </Field>
           <div style={{ gridColumn: '1/-1' }}><Field label="Full Description"><textarea value={form.desc} onChange={(e) => setForm({ ...form, desc: e.target.value })} placeholder="FULL DETAILS..." style={{ ...IS, minHeight: 80, resize: 'vertical' }} /></Field></div>

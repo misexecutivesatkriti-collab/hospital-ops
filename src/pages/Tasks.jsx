@@ -303,7 +303,7 @@ function ExtensionApprovalModal({ task, open, onClose, onDecide, currentUser }) 
         {task.status === 'done' && <span style={{ color: '#6b7a90' }}>✅ Completed: <strong style={{ color: '#1a7a4a' }}>{task.lastDone ? fDate(task.lastDone) : '—'}</strong></span>}
       </div>
       {exts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: '#6b7a90', fontSize: 13, background: '#f8fbff', borderRadius: 8 }}>Koi extension request nahi hai abhi tak</div>
+        <div style={{ textAlign: 'center', padding: '24px', color: '#6b7a90', fontSize: 13, background: '#f8fbff', borderRadius: 8 }}>No extension requests yet</div>
       ) : exts.map((x, i) => (
         <div key={x.id} style={{ background: x.status === 'pending' ? '#fffbeb' : x.status === 'approved' ? '#f0fdf4' : '#fff5f5', border: `1.5px solid ${x.status === 'pending' ? '#f5c842' : x.status === 'approved' ? '#86efac' : '#fca5a5'}`, borderRadius: 10, padding: '12px 14px', marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
@@ -323,8 +323,8 @@ function ExtensionApprovalModal({ task, open, onClose, onDecide, currentUser }) 
           {x.status === 'pending' && (() => {
             const isAssigner = currentUser.name === task.createdBy || currentRole === 'mainadmin';
             const isSelfRequest = x.reqBy === currentUser.name;
-            if (!isAssigner) return <div style={{ fontSize: 11, color: '#6b7a90', marginTop: 6, fontStyle: 'italic' }}>Sirf task assigner ({task.createdBy}) approve kar sakta hai</div>;
-            if (isSelfRequest) return <div style={{ fontSize: 11, color: '#c0392b', marginTop: 6, fontWeight: 700 }}>🚫 Aap apna khud ka extension approve nahi kar sakte</div>;
+            if (!isAssigner) return <div style={{ fontSize: 11, color: '#6b7a90', marginTop: 6, fontStyle: 'italic' }}>Only the task assigner ({task.createdBy}) can approve this</div>;
+            if (isSelfRequest) return <div style={{ fontSize: 11, color: '#c0392b', marginTop: 6, fontWeight: 700 }}>🚫 You cannot approve your own extension request</div>;
             return (
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                 <button onClick={() => onDecide(task, x.id, 'approved', currentUser.name)} style={{ padding: '6px 14px', borderRadius: 7, background: '#1a7a4a', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>✅ Approve Extension</button>
@@ -451,7 +451,7 @@ export default function Tasks() {
   }
 
   async function handleDelete(task) {
-    if (!confirm(`"${task.name}" trash mein move karein?`)) return;
+    if (!confirm(`Move '${task.name}' to Trash?`)) return;
     await moveToTrash('task', task.id);
   }
 

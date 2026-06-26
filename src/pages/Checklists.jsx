@@ -106,7 +106,7 @@ export default function Checklists() {
             })}
           </div>
         );
-      }) : <EmptyState icon="📋" message="KOI TASKS NAHI" />}
+      }) : <EmptyState icon="📋" message="NO TASKS FOUND" />}
     </div>
   );
 }

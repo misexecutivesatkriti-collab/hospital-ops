@@ -171,15 +171,15 @@ export function buildWelcomeHtml({ to_name, to_email, dept, role, hospital_name 
     <p>Welcome to the Team!</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext">Aapko <strong>Hospital Ops System</strong> par <strong>Employee</strong> ke roop mein successfully register kar liya gaya hai.</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext">You have been successfully registered as an <strong>Employee</strong> on the <strong>Hospital Ops System</strong>.</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('👤 Name',       `<strong>${to_name}</strong>`, false)}
       ${row('🏢 Department', dept,                           true)}
       ${row('🔑 Role',       role,                           false)}
       ${row('📧 Email',      to_email,                       true)}
     </table>
-    ${alertBox('#1a7a4a', '#e8f5e9', '#1a7a4a', '✅ Login credentials ke liye apne admin se sampark karein.')}`;
+    ${alertBox('#1a7a4a', '#e8f5e9', '#1a7a4a', '✅ Please contact your admin for your login credentials.')}`;
 
   return baseWrap('#0d7377', header, body, hospital_name);
 }
@@ -193,11 +193,11 @@ export function buildAssignedHtml({ to_name, task_name, task_type, assigned_by, 
 
   const header = `
     <h2>${icon} ${task_type}</h2>
-    <p>Aapko ek naya task assign hua hai</p>`;
+    <p>You have been assigned a new task</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext"><strong>${assigned_by}</strong> ne aapko ek <strong>${task_type}</strong> assign kiya hai:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext"><strong>${assigned_by}</strong> has assigned you a <strong>${task_type}</strong>:</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('📌 Task Name',    `<strong>${task_name}</strong>`, false)}
       ${row('🏢 Department',   dept,                            true)}
@@ -208,7 +208,7 @@ export function buildAssignedHtml({ to_name, task_name, task_type, assigned_by, 
       ${row('👤 Assigned By',  `<strong>${assigned_by}</strong>`, false)}
       ${notes ? row('📝 Notes', notes, true) : ''}
     </table>
-    ${alertBox('#856404', '#fff3cd', '#f5c842', '⚠️ Kripya task ko schedule date aur time par complete karein.')}`;
+    ${alertBox('#856404', '#fff3cd', '#f5c842', '⚠️ Please complete this task by the scheduled date and time.')}`;
 
   return baseWrap(color, header, body, hospital_name);
 }
@@ -217,11 +217,11 @@ export function buildAssignedHtml({ to_name, task_name, task_type, assigned_by, 
 export function buildCompletedHtml({ to_name, task_name, dept, completed_on, completed_at, priority, freq, hospital_name }) {
   const header = `
     <h2>✅ Task Successfully Completed!</h2>
-    <p>Badhai ho! Aapne apna task complete kar liya</p>`;
+    <p>Well done! You have completed your task.</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext">Aapne niche diye gaye task ko successfully complete kar liya hai:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext">You have successfully completed the following task:</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('📌 Task Name',    `<strong>${task_name}</strong>`,      false)}
       ${row('🏢 Department',   dept,                                  true)}
@@ -230,7 +230,7 @@ export function buildCompletedHtml({ to_name, task_name, dept, completed_on, com
       ${row('⚡ Priority',     priority     || 'Medium',             false)}
       ${row('🔁 Frequency',    freq         || '—',                   true)}
     </table>
-    ${alertBox('#1a7a4a', '#d4edda', '#1a7a4a', '🎯 Shukriya! Apna kaam time par karne ke liye.')}`;
+    ${alertBox('#1a7a4a', '#d4edda', '#1a7a4a', '🎯 Thank you for completing your work on time.')}`;
 
   return baseWrap('#16a34a', header, body, hospital_name);
 }
@@ -238,9 +238,9 @@ export function buildCompletedHtml({ to_name, task_name, dept, completed_on, com
 // ── 4. Task Reminder ──────────────────────────────────────────────────────────
 export function buildReminderHtml({ to_name, task_name, dept, sched_date, task_time, freq, priority, assigned_by, reminder_type, hospital_name }) {
   const cfg = {
-    overdue:   { color: '#dc2626', icon: '🚨', label: 'Overdue Task — Turant Complete Karein!',  alertBg: '#fee2e2', alertBorder: '#dc2626', alertText: '#7f1d1d', alertMsg: '🚨 Yeh task overdue hai — please abhi complete karein.' },
-    due_today: { color: '#d97706', icon: '⏰', label: 'Due Today — Aaj Complete Karna Hai',      alertBg: '#fff3cd', alertBorder: '#f5c842', alertText: '#856404', alertMsg: '⚠️ Aaj ka din khatam hone se pehle is task ko complete kar lein.' },
-    scheduled: { color: '#0d7377', icon: '📅', label: 'Scheduled Reminder',                      alertBg: '#e8f5fd', alertBorder: '#0d7377', alertText: '#0d7377', alertMsg: '📅 Scheduled task ka reminder — time par complete karein.' },
+    overdue:   { color: '#dc2626', icon: '🚨', label: 'Overdue Task — Please Complete Immediately!',  alertBg: '#fee2e2', alertBorder: '#dc2626', alertText: '#7f1d1d', alertMsg: '🚨 This task is overdue — please complete it immediately.' },
+    due_today: { color: '#d97706', icon: '⏰', label: 'Due Today — Must Be Completed Today',           alertBg: '#fff3cd', alertBorder: '#f5c842', alertText: '#856404', alertMsg: '⚠️ Please complete this task before the end of today.' },
+    scheduled: { color: '#0d7377', icon: '📅', label: 'Scheduled Reminder',                            alertBg: '#e8f5fd', alertBorder: '#0d7377', alertText: '#0d7377', alertMsg: '📅 This is a reminder for your scheduled task — please complete it on time.' },
   };
   const c = cfg[reminder_type] || cfg.scheduled;
 
@@ -249,8 +249,8 @@ export function buildReminderHtml({ to_name, task_name, dept, sched_date, task_t
     <p>${c.label}</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext">Yeh aapke scheduled task ka reminder hai:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext">This is a reminder for your scheduled task:</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('📌 Task Name',     `<strong>${task_name}</strong>`,         false)}
       ${row('🏢 Department',    dept,                                     true)}
@@ -269,11 +269,11 @@ export function buildReminderHtml({ to_name, task_name, dept, sched_date, task_t
 export function buildHandoverCreatedHtml({ to_name, from_name, dept, date_start, date_end, task_count, notes, hospital_name }) {
   const header = `
     <h2>🔄 Task Handover Request</h2>
-    <p>Aapko ek handover request mili hai</p>`;
+    <p>You have received a handover request</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext"><strong>${from_name}</strong> ne aapko apne tasks handover karne ki request bheji hai. Kripya niche details dekhein aur accept ya reject karein:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext"><strong>${from_name}</strong> has sent you a request to handover their tasks. Please review the details below and accept or reject:</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('👤 Handover From',  `<strong>${from_name}</strong>`, false)}
       ${row('👤 Handover To',    `<strong>${to_name}</strong>`,   true)}
@@ -283,7 +283,7 @@ export function buildHandoverCreatedHtml({ to_name, from_name, dept, date_start,
       ${row('📌 Tasks Count',    `<strong>${task_count} tasks</strong>`, true)}
       ${notes ? row('📝 Notes',  notes, false) : ''}
     </table>
-    ${alertBox('#7c3aed', '#f5f3ff', '#7c3aed', '⏳ Kripya Hospital Ops System mein login karke is request ko <strong>Accept</strong> ya <strong>Reject</strong> karein.')}`;
+    ${alertBox('#7c3aed', '#f5f3ff', '#7c3aed', '⏳ Please log in to Hospital Ops System to <strong>Accept</strong> or <strong>Reject</strong> this request.')}`;
 
   return baseWrap('#7c3aed', header, body, hospital_name);
 }
@@ -304,11 +304,11 @@ export function buildHandoverTasksHtml({ to_name, from_name, dept, date_start, d
 
   const header = `
     <h2>📋 Handover Tasks Assigned</h2>
-    <p>Aapke paas ye tasks handover hue hain — please complete karein</p>`;
+    <p>These tasks have been handed over to you — please complete them</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext">Aapne <strong>${from_name}</strong> ka handover accept kar liya hai. Niche diye gaye <strong>${tasks.length} tasks</strong> ab aapki responsibility hain <strong>${date_start}</strong> se <strong>${date_end}</strong> tak:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext">You have accepted the handover from <strong>${from_name}</strong>. The following <strong>${tasks.length} tasks</strong> are now your responsibility from <strong>${date_start}</strong> to <strong>${date_end}</strong>:</p>
 
     <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin:16px 0">
       <thead>
@@ -328,7 +328,7 @@ export function buildHandoverTasksHtml({ to_name, from_name, dept, date_start, d
       ${row('📅 To',          date_end,     false)}
       ${row('📌 Total Tasks', `<strong>${tasks.length}</strong>`, true)}
     </table>
-    ${alertBox('#1a7a4a', '#d4edda', '#1a7a4a', '✅ Kripya in tasks ko schedule ke anusaar complete karein. Kisi bhi samasya ke liye apne admin se sampark karein.')}`;
+    ${alertBox('#1a7a4a', '#d4edda', '#1a7a4a', '✅ Please complete these tasks as per the schedule. Contact your admin if you need any assistance.')}`;
 
   return baseWrap('#0d7377', header, body, hospital_name);
 }
@@ -343,11 +343,11 @@ export function buildHandoverResponseHtml({ to_name, by_name, decision, remark, 
 
   const header = `
     <h2>${icon} ${label}</h2>
-    <p>${isAccepted ? `${by_name} ne aapka handover accept kar liya` : `${by_name} ne aapka handover reject kar diya`}</p>`;
+    <p>${isAccepted ? `${by_name} has accepted your handover` : `${by_name} has rejected your handover`}</p>`;
 
   const body = `
-    <p class="greeting">Namaste <strong>${to_name}</strong>,</p>
-    <p class="subtext"><strong>${by_name}</strong> ne aapki handover request ka jawab diya hai:</p>
+    <p class="greeting">Hello <strong>${to_name}</strong>,</p>
+    <p class="subtext"><strong>${by_name}</strong> has responded to your handover request:</p>
     <table class="info-table" role="presentation" cellpadding="0" cellspacing="0">
       ${row('📋 Decision',    `<strong style="color:${color}">${icon} ${decision.toUpperCase()}</strong>`, false)}
       ${row('👤 Decided By', `<strong>${by_name}</strong>`,           true)}
@@ -357,8 +357,8 @@ export function buildHandoverResponseHtml({ to_name, by_name, decision, remark, 
       ${remark ? row('💬 Remark', `<em>${remark}</em>`, true) : ''}
     </table>
     ${isAccepted
-      ? alertBox('#1a7a4a', '#d4edda', '#1a7a4a', `✅ ${by_name} aapke tasks ${date_start} se ${date_end} tak sambhalenge.`)
-      : alertBox('#7f1d1d', '#fee2e2', '#dc2626', `❌ Handover reject ho gaya hai. Kripya koi aur employee select karein ya seedha in tasks ko manage karein.`)}`;
+      ? alertBox('#1a7a4a', '#d4edda', '#1a7a4a', `✅ ${by_name} will handle your tasks from ${date_start} to ${date_end}.`)
+      : alertBox('#7f1d1d', '#fee2e2', '#dc2626', `❌ The handover has been rejected. Please select another employee or manage these tasks directly.`)}`;
 
   return baseWrap(color, header, body, hospital_name);
 }

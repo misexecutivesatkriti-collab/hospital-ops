@@ -72,7 +72,7 @@ export default function Departments() {
               )}
             </div>
           );
-        }) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="🏢" message="KOI DEPARTMENTS NAHI" /></div>}
+        }) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="🏢" message="NO DEPARTMENTS FOUND" /></div>}
       </div>
 
       <Modal open={showForm} onClose={() => setShowForm(false)} title={editDept ? 'Edit Department' : 'Add Department'}>

@@ -13,13 +13,13 @@ function ConfirmModal({ open, onConfirm, onCancel, count }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'white', borderRadius: 14, padding: 28, maxWidth: 380, width: '90%', boxShadow: '0 8px 40px rgba(0,0,0,0.2)', textAlign: 'center' }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>⚠️</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: '#0b1e3d', marginBottom: 8 }}>Trash Permanently Clear Karein?</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: '#0b1e3d', marginBottom: 8 }}>Permanently Clear Trash?</div>
         <div style={{ fontSize: 13, color: '#6b7a90', marginBottom: 20 }}>
-          Sabhi <strong style={{ color: '#c0392b' }}>{count} items</strong> permanently delete ho jaayenge.<br />Ye action undo nahi ho sakta — restore bhi nahi hoga.
+          All <strong style={{ color: '#c0392b' }}>{count} items</strong> will be permanently deleted.<br />This action cannot be undone — items cannot be restored.
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button onClick={onConfirm} style={{ padding: '9px 24px', borderRadius: 8, background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
-            Haan, Permanently Delete Karo
+            Yes, Permanently Delete
           </button>
           <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: 8, background: 'transparent', color: '#0d7377', border: '1.5px solid #0d7377', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
             Cancel
@@ -124,7 +124,7 @@ export default function Trash() {
                   </td>
                 </tr>
               );
-            }) : <tr><td colSpan={6}><EmptyState icon="🗑️" message="TRASH EMPTY" /></td></tr>}
+            }) : <tr><td colSpan={6}><EmptyState icon="🗑️" message="TRASH IS EMPTY" /></td></tr>}
           </tbody>
         </table>
         <div style={{ borderTop: '1px solid #d8e2ef', padding: '0 8px' }}>

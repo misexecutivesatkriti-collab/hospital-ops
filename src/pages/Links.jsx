@@ -54,7 +54,7 @@ export default function Links() {
               <button onClick={() => handleDelete(l.id)} style={{ padding: '5px 9px', borderRadius: 7, background: 'transparent', border: '1px solid #d8e2ef', cursor: 'pointer', fontSize: 12 }}>🗑️</button>
             </div>
           </div>
-        )) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="🔗" message="KOI LINKS NAHI — ADD KAREIN!" /></div>}
+        )) : <div style={{ gridColumn: '1/-1' }}><EmptyState icon="🔗" message="NO LINKS FOUND — ADD ONE!" /></div>}
       </div>
 
       <Modal open={showForm} onClose={() => setShowForm(false)} title="Add Link">

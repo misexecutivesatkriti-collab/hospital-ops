@@ -72,7 +72,7 @@ export default function Admins() {
                   </div>
                 </td>
               </tr>
-            )) : <tr><td colSpan={4}><EmptyState icon="👨‍💼" message="KOI ADMINS NAHI" /></td></tr>}
+            )) : <tr><td colSpan={4}><EmptyState icon="👨‍💼" message="NO ADMINS FOUND" /></td></tr>}
           </tbody>
         </table>
       </div>

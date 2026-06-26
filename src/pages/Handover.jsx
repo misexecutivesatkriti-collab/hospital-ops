@@ -108,7 +108,7 @@ export default function Handover() {
     if (!form.toName) { setMsg('❌ Handover To required!'); return; }
     if (!form.dateStart || !form.dateEnd) { setMsg('❌ Start and End date required!'); return; }
     if (form.dateEnd < form.dateStart) { setMsg('❌ End date must be after start date!'); return; }
-    if (selectedIds.size === 0) { setMsg('❌ At least 1 task select karein!'); return; }
+    if (selectedIds.size === 0) { setMsg('❌ Please select at least 1 task!'); return; }
     if (saving) return;
     setSaving(true);
     try {
@@ -127,7 +127,7 @@ export default function Handover() {
         } : h);
         await save('hops-handovers', updated);
         await logAct('HANDOVER EDITED', `${form.fromName} → ${form.toName} | ${selectedIds.size} tasks`);
-        setMsg('✅ Handover update ho gaya!');
+        setMsg('✅ Handover updated successfully!');
       } else {
         // New
         const obj = {
@@ -145,16 +145,16 @@ export default function Handover() {
         };
         await save('hops-handovers', [...handovers, obj]);
         await logAct('HANDOVER CREATED', `${obj.fromName} → ${obj.toName} | ${obj.taskIds.length} tasks | ${obj.dateStart} to ${obj.dateEnd}`);
-        setMsg('✅ Handover create ho gaya! Recipient ko accept/reject karna hoga.');
+        setMsg('✅ Handover created successfully! The recipient must accept or reject it.');
 
         // Email to recipient (toName)
         const toEmp = employees.find(e => e.name.trim().toUpperCase() === obj.toName.trim().toUpperCase());
         if (toEmp?.email) {
           try {
             await sendHandoverCreatedEmail(obj, toEmp);
-            setMsg('✅ Handover create ho gaya! 📧 Email bhi bhej di gayi.');
+            setMsg('✅ Handover created successfully! 📧 Email notification sent.');
           } catch {
-            setMsg('✅ Handover create ho gaya! ⚠️ Email nahi ja saki — server check karein.');
+            setMsg('✅ Handover created successfully! ⚠️ Email could not be sent — please check the server.');
           }
         } else {
           // No email in system — show popup to collect it
@@ -168,7 +168,7 @@ export default function Handover() {
   }
 
   async function handlePopupSend() {
-    if (!popupEmail.trim() || !popupEmail.includes('@')) { alert('Valid email enter karein!'); return; }
+    if (!popupEmail.trim() || !popupEmail.includes('@')) { alert('Please enter a valid email address!'); return; }
     const { emp, handoverObj } = emailPopup;
     // Save email to employee record
     const updatedEmps = employees.map(e => e.id === emp.id ? { ...e, email: popupEmail.trim() } : e);
@@ -179,7 +179,7 @@ export default function Handover() {
   }
 
   async function cancelHandover(h) {
-    if (!window.confirm('Is handover ko cancel karna chahte hain?')) return;
+    if (!window.confirm('Are you sure you want to cancel this handover?')) return;
     await save('hops-handovers', handovers.map(x => x.id === h.id ? { ...x, status: 'cancelled' } : x));
     await logAct('HANDOVER CANCELLED', `${h.fromName} → ${h.toName}`);
   }
@@ -215,8 +215,8 @@ export default function Handover() {
             <div style={{ fontSize: 28, marginBottom: 8, textAlign: 'center' }}>📧</div>
             <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, color: '#0b1e3d', margin: '0 0 6px', textAlign: 'center' }}>Email ID Missing</h3>
             <p style={{ fontSize: 13, color: '#4a5568', textAlign: 'center', marginBottom: 18 }}>
-              <strong>{emailPopup.emp.name}</strong> ka email address nahi hai.<br />
-              Handover notification bhejne ke liye email enter karein:
+              <strong>{emailPopup.emp.name}</strong> does not have an email address on file.<br />
+              Enter an email address to send the handover notification:
             </p>
             <input
               type="email"
@@ -231,7 +231,7 @@ export default function Handover() {
               <button onClick={handlePopupSend} style={{ flex: 1, padding: '9px 0', borderRadius: 8, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>📨 Save & Send Email</button>
               <button onClick={() => { setEmailPopup(null); resetForm(); }} style={{ padding: '9px 14px', borderRadius: 8, background: 'transparent', color: '#6b7a90', border: '1.5px solid #d8e2ef', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Skip</button>
             </div>
-            <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>Email save bhi ho jayega employee record mein</p>
+            <p style={{ fontSize: 11, color: '#9ca3af', textAlign: 'center', marginTop: 10, marginBottom: 0 }}>The email will also be saved to the employee's record</p>
           </div>
         </div>
       )}
@@ -311,9 +311,9 @@ export default function Handover() {
               <span style={{ fontSize: 11, color: '#6b7a90', fontFamily: "'Nunito',sans-serif", fontWeight: 600, marginLeft: 8 }}>({selectedIds.size} selected)</span>
             </div>
             {!form.fromName ? (
-              <div style={{ padding: 14, background: '#f8fbff', border: '1px solid #d8e2ef', borderRadius: 9, color: '#6b7a90', fontSize: 13 }}>Pehle "Handover From" select karein</div>
+              <div style={{ padding: 14, background: '#f8fbff', border: '1px solid #d8e2ef', borderRadius: 9, color: '#6b7a90', fontSize: 13 }}>Please select a 'Handover From' employee first</div>
             ) : eligibleTasks.length === 0 ? (
-              <div style={{ padding: 14, background: '#f8fbff', border: '1px solid #d8e2ef', borderRadius: 9, textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>Is employee ke koi pending tasks nahi hain</div>
+              <div style={{ padding: 14, background: '#f8fbff', border: '1px solid #d8e2ef', borderRadius: 9, textAlign: 'center', color: '#6b7a90', fontSize: 13 }}>This employee has no pending tasks</div>
             ) : (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, padding: '8px 12px', background: '#f8fbff', borderRadius: 8, border: '1px solid #d8e2ef' }}>
@@ -464,7 +464,7 @@ export default function Handover() {
               )}
             </div>
           );
-        }) : <EmptyState icon="🔄" message="KOI HANDOVERS NAHI" />}
+        }) : <EmptyState icon="🔄" message="NO HANDOVERS FOUND" />}
         <Pagination {...paged} onPage={(p) => setPage(p)} />
       </div>
     </div>

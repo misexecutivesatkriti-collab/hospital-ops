@@ -27,7 +27,7 @@ async function send({ to_email, to_name, subject, message_html }) {
   }
 }
 
-// ── 1. Welcome email — jab naya employee add ho ───────────────────────────────
+// ── 1. Welcome email — sent when a new employee is added ─────────────────────
 export async function sendWelcomeEmail(employee) {
   if (!employee?.email) return;
   const cfg = getCfg();
@@ -42,7 +42,7 @@ export async function sendWelcomeEmail(employee) {
   await send({
     to_email:     employee.email,
     to_name:      employee.name,
-    subject:      `🏥 Hospital Ops — Aapka Account Ready Hai, ${employee.name}!`,
+    subject:      `🏥 Hospital Ops — Your Account Is Ready, ${employee.name}!`,
     message_html,
   });
 }
@@ -119,7 +119,7 @@ export async function sendHandoverTasksEmail(handover, toEmployee, taskList) {
   await send({
     to_email:     toEmployee.email,
     to_name:      toEmployee.name,
-    subject:      `📋 ${taskList.length} Handover Tasks — ${handover.fromName} se aapke paas (${handover.dateStart} → ${handover.dateEnd})`,
+    subject:      `📋 ${taskList.length} Handover Tasks — From ${handover.fromName} (${handover.dateStart} → ${handover.dateEnd})`,
     message_html,
   });
 }

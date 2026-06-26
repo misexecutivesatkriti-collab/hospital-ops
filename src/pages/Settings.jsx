@@ -74,20 +74,20 @@ export default function Settings() {
     if (brevoForm.apiKey.trim())      payload.apiKey      = brevoForm.apiKey.trim();
     if (brevoForm.senderEmail.trim()) payload.senderEmail = brevoForm.senderEmail.trim();
     if (brevoForm.senderName.trim())  payload.senderName  = brevoForm.senderName.trim();
-    if (!Object.keys(payload).length) { setBrevoMsg('❌ Kuch bhi enter nahi kiya!'); return; }
+    if (!Object.keys(payload).length) { setBrevoMsg('❌ Please enter at least one field to update!'); return; }
     setBrevoLoading(true);
     try {
       const r = await fetch(`${SERVER}/api/email/config`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
       if (!r.ok) throw new Error();
-      setBrevoMsg('✅ Config save ho gaya! Server restart karein.');
+      setBrevoMsg('✅ Configuration saved! Please restart the server.');
       setBrevoForm({ apiKey: '', senderEmail: '', senderName: '' });
       const d = await fetch(`${SERVER}/api/email/config`).then(r2 => r2.json());
       setBrevoMasked(d);
       await logAct('BREVO CONFIG UPDATED', '');
     } catch {
-      setBrevoMsg('❌ Server se connect nahi ho saka.');
+      setBrevoMsg('❌ Could not connect to the server.');
     } finally {
       setBrevoLoading(false);
     }
@@ -161,7 +161,7 @@ export default function Settings() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: brevoMasked.configured ? '#d4edda' : '#fff3cd', border: `1px solid ${brevoMasked.configured ? '#86efac' : '#ffc107'}` }}>
             <span style={{ fontSize: 16 }}>{brevoMasked.configured ? '✅' : '⚠️'}</span>
             <span style={{ fontSize: 12, fontWeight: 800, color: brevoMasked.configured ? '#1a7a4a' : '#856404' }}>
-              {brevoMasked.configured ? 'Brevo configured hai — emails active hain' : 'Brevo abhi configure nahi hai — emails nahi jayenge'}
+              {brevoMasked.configured ? 'Brevo is configured — emails are active' : 'Brevo is not yet configured — emails will not be sent'}
             </span>
           </div>
 
@@ -230,7 +230,7 @@ export default function Settings() {
             </div>
 
             {/* Hospital Name */}
-            <Field label="Hospital / Organization Name (emails footer mein)">
+            <Field label="Hospital / Organization Name (shown in email footer)">
               <input value={emailForm.hospitalName} onChange={e => setEmailForm({ ...emailForm, hospitalName: e.target.value })} placeholder="Hospital Operations" style={IS} />
             </Field>
           </div>

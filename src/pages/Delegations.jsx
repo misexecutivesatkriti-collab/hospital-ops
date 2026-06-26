@@ -106,7 +106,7 @@ export default function Delegations() {
               </>}
             </div>
           </div>
-        )) : <EmptyState icon="📤" message="KOI DELEGATIONS NAHI" />}
+        )) : <EmptyState icon="📤" message="NO DELEGATIONS FOUND" />}
       </div>
 
       <Modal open={showForm} onClose={() => setShowForm(false)} title="Delegate Task">

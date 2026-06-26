@@ -13,13 +13,13 @@ function ConfirmModal({ open, onConfirm, onCancel, count }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ background: 'white', borderRadius: 14, padding: 28, maxWidth: 380, width: '90%', boxShadow: '0 8px 40px rgba(0,0,0,0.2)', textAlign: 'center' }}>
         <div style={{ fontSize: 36, marginBottom: 10 }}>🗑️</div>
-        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: '#0b1e3d', marginBottom: 8 }}>Activity Log Clear Karein?</div>
+        <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, color: '#0b1e3d', marginBottom: 8 }}>Clear Activity Log?</div>
         <div style={{ fontSize: 13, color: '#6b7a90', marginBottom: 20 }}>
-          Sabhi <strong style={{ color: '#c0392b' }}>{count} entries</strong> permanently delete ho jaayengi.<br />Ye action undo nahi ho sakta.
+          All <strong style={{ color: '#c0392b' }}>{count} entries</strong> will be permanently deleted.<br />This action cannot be undone.
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button onClick={onConfirm} style={{ padding: '9px 24px', borderRadius: 8, background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
-            Haan, Clear Karo
+            Yes, Clear All
           </button>
           <button onClick={onCancel} style={{ padding: '9px 24px', borderRadius: 8, background: 'transparent', color: '#0d7377', border: '1.5px solid #0d7377', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>
             Cancel
@@ -96,7 +96,7 @@ export default function ActivityLog() {
                 </td>
                 <td style={{ padding: '10px 14px', fontSize: 12, color: '#1a2535' }}>{l.details || '—'}</td>
               </tr>
-            )) : <tr><td colSpan={4}><EmptyState icon="📜" message="KOI ACTIVITY NAHI" /></td></tr>}
+            )) : <tr><td colSpan={4}><EmptyState icon="📜" message="NO ACTIVITY FOUND" /></td></tr>}
           </tbody>
         </table>
         <div style={{ borderTop: '1px solid #d8e2ef', padding: '0 8px' }}>

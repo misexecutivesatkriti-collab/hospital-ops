@@ -58,7 +58,7 @@ export default function AllIssues() {
             </div>
             {i.resolveRemark && <div style={{ marginTop: 8, background: '#d4edda', padding: '6px 10px', borderRadius: 7, fontSize: 11, color: '#1a7a4a' }}>✅ {i.resolveRemark} — By {i.resolveBy}</div>}
           </div>
-        )) : <EmptyState icon="✅" message="KOI ISSUES NAHI" />}
+        )) : <EmptyState icon="✅" message="NO ISSUES FOUND" />}
       </div>
     </div>
   );
