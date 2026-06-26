@@ -1,0 +1,620 @@
+import { useState, useEffect, useRef } from 'react';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useAuth as useAuthHook } from '../../context/AuthContext';
+import { useApp as useAppForSaving } from '../../context/AppContext';
+import { useApp } from '../../context/AppContext';
+import { isTaskDueToday, toDay } from '../../utils';
+import { useTaskNotifications } from '../../hooks/useTaskNotifications';
+
+function useDarkTheme() {
+  const [dark, setDark] = useState(() => document.documentElement.getAttribute('data-theme') === 'dark');
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setDark(document.documentElement.getAttribute('data-theme') === 'dark');
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+}
+
+const PAGE_TITLES = {
+  '/dashboard': 'Dashboard', '/tasks': 'Manage Tasks', '/my-tasks': 'My Tasks',
+  '/assign-task': 'Assign Task', '/checklist': 'Department Checklists',
+  '/issues': 'Issues / Problems', '/all-issues': 'All Issues',
+  '/escalation': 'Escalation Tracker', '/employees': 'Employee List',
+  '/handover': 'Staff Handover', '/my-handover': 'Handover Form',
+  '/departments': 'Departments', '/delegation': 'Delegation Tracker',
+  '/my-delegation': 'My Delegations', '/tracking': 'Live Tracking Dashboard',
+  '/activity': 'Activity Log', '/mis': 'MIS Reporting',
+  '/trash': 'Trash (Auto-Delete After 1 Year)', '/link-box': '🔗 Link Box',
+  '/settings': 'Settings', '/report-issue': 'Report a Problem',
+};
+
+export default function AppLayout() {
+  const { currentRole, currentUser, logout, inactivityPct, inactivityWarning, inactivitySeconds, showSessionModal, continueSession } = useAuth();
+  const { isSaving } = useAppForSaving();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (!currentRole) return <Navigate to="/login" replace />;
+
+  const pageTitle = PAGE_TITLES[location.pathname] || 'Hospital Ops';
+
+  return (
+    <>
+    <style>{`
+      @keyframes hopsSave {
+        0%   { left: -40%; }
+        100% { left: 120%; }
+      }
+      .hops-save-bar { position: fixed; top: 55px; left: 0; right: 0; height: 2px; z-index: 9998; background: #e4eaf2; overflow: hidden; }
+      .hops-save-bar::after { content: ''; position: absolute; height: 100%; width: 40%; background: linear-gradient(90deg, transparent, #0d7377, #14a5ab, transparent); animation: hopsSave 0.9s ease infinite; }
+    `}</style>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#eef2f7', fontFamily: "'Nunito',sans-serif" }}>
+      <SidebarMenu
+        currentPath={location.pathname}
+        onNavigate={(path) => { navigate(path); setMobileOpen(false); }}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+        currentRole={currentRole}
+        currentUser={currentUser}
+        logout={logout}
+      />
+
+      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 90 }} />}
+
+      <div className="hops-main" style={{ flex: 1, marginLeft: 230, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div style={{ height: 56, background: 'white', borderBottom: '1px solid #d8e2ef', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={() => setMobileOpen((s) => !s)} className="hops-hamburger" style={{ flexDirection: 'column', gap: 4, cursor: 'pointer', padding: 4, border: 'none', background: 'none' }}>
+              <span style={{ width: 19, height: 2, background: '#0b1e3d', borderRadius: 2, display: 'block' }} />
+              <span style={{ width: 19, height: 2, background: '#0b1e3d', borderRadius: 2, display: 'block' }} />
+              <span style={{ width: 19, height: 2, background: '#0b1e3d', borderRadius: 2, display: 'block' }} />
+            </button>
+            <div className="hops-topbar-title" style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: '#0b1e3d', fontWeight: 700 }}>{pageTitle}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isSaving && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 7, padding: '4px 10px' }}>
+                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#0d7377', animation: 'pulse 1s ease infinite' }} />
+                <span style={{ fontSize: 11, color: '#0d7377', fontWeight: 800 }}>Saving...</span>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: '#6b7a90', fontWeight: 600, background: '#f3f7fc', padding: '5px 10px', borderRadius: 7, border: '1px solid #d8e2ef' }}>
+              {new Date().toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short' })}
+            </div>
+          </div>
+        </div>
+
+        {isSaving && <div className="hops-save-bar" />}
+
+        <main className="hops-main-pad" style={{ flex: 1, overflowY: 'auto' }}>
+          <Outlet />
+        </main>
+      </div>
+
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 3, zIndex: 9999, pointerEvents: 'none' }}>
+        <div style={{
+          height: '100%', width: `${inactivityPct}%`, transition: 'width 1s linear, background 1s',
+          background: inactivityPct < 20 ? 'linear-gradient(90deg,#c0392b,#ff6b6b)' : inactivityPct < 40 ? 'linear-gradient(90deg,#d4920a,#f5c842)' : 'linear-gradient(90deg,#0d7377,#27ae60)',
+        }} />
+      </div>
+      {inactivityWarning && !showSessionModal && (
+        <div style={{ position: 'fixed', bottom: 14, right: 14, background: '#1a2535', color: 'white', padding: '10px 16px', borderRadius: 10, fontSize: 12, fontWeight: 700, zIndex: 9999, boxShadow: '0 4px 20px rgba(0,0,0,0.3)', borderLeft: '3px solid #d4920a' }}>
+          ⏰ {inactivitySeconds} second mein session expire — kuch click karein!
+        </div>
+      )}
+
+      {showSessionModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: '32px 28px', maxWidth: 380, width: '90%', boxShadow: '0 12px 50px rgba(0,0,0,0.3)', textAlign: 'center' }}>
+            <div style={{ fontSize: 42, marginBottom: 12 }}>⏰</div>
+            <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, color: '#0b1e3d', marginBottom: 8, fontWeight: 700 }}>Session Expire Ho Gayi</div>
+            <div style={{ fontSize: 13, color: '#6b7a90', marginBottom: 24, lineHeight: 1.6 }}>
+              5 minute se koi activity nahi thi.<br />
+              Kya aap <strong style={{ color: '#0d7377' }}>continue</strong> karna chahte hain<br />ya <strong style={{ color: '#c0392b' }}>logout</strong> karna chahte hain?
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={continueSession} style={{ padding: '10px 26px', borderRadius: 9, background: '#0d7377', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, boxShadow: '0 2px 8px rgba(13,115,119,0.3)' }}>✅ Continue Karein</button>
+              <button onClick={logout} style={{ padding: '10px 26px', borderRadius: 9, background: 'transparent', color: '#c0392b', border: '2px solid #c0392b', cursor: 'pointer', fontWeight: 800, fontSize: 14 }}>⬅ Logout</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}
+
+function SidebarMenu({ currentPath, onNavigate, mobileOpen, onMobileClose, currentRole, currentUser, logout }) {
+  const { tasks, issues, handovers, delegations, employees, depts, isSaving } = useApp();
+  const { hasPerm } = useAuthHook();
+  const { toasts, dismissToast, dismissAll } = useTaskNotifications(tasks, handovers, currentUser, currentRole, employees);
+  const isDark = useDarkTheme();
+  const listRef = useRef(null);
+  const prevToastLen = useRef(0);
+  const [exitingIds, setExitingIds] = useState(new Set());
+
+  function clearAllAnimated() {
+    const STEP = 80;
+    toasts.forEach((t, i) => {
+      setTimeout(() => {
+        setExitingIds(prev => new Set([...prev, t.id]));
+      }, i * STEP);
+    });
+    // Last notification finishes at (length-1)*STEP + 300ms slide-out
+    setTimeout(() => {
+      dismissAll();
+      setExitingIds(new Set());
+    }, (toasts.length - 1) * STEP + 300);
+  }
+
+  // Smoothly scroll to bottom BEFORE new toasts' slide-in begins
+  useEffect(() => {
+    if (!listRef.current) return;
+    if (toasts.length > prevToastLen.current) {
+      listRef.current.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+    }
+    prevToastLen.current = toasts.length;
+  }, [toasts.length]);
+
+  const isMain = currentRole === 'mainadmin';
+  const isAdmin = currentRole === 'admin';
+  const isStaff = currentRole === 'staff';
+
+  const myTasksBase = isMain || hasPerm('all_task_details')
+    ? tasks
+    : tasks.filter((t) => t.assignedTo?.includes(currentUser.name) || t.createdBy === currentUser.name);
+
+  const badges = {
+    tasks: myTasksBase.filter((t) => t.status === 'pending').length,
+    myTasks: (() => {
+      const myName = currentUser.name;
+      const today = toDay();
+      const activeHovers = handovers.filter(h =>
+        (h.toName || '').toUpperCase() === myName.toUpperCase() &&
+        h.status === 'accepted' && h.dateStart && h.dateEnd &&
+        today >= h.dateStart && today <= h.dateEnd
+      );
+      const hoverTaskIds = new Set(activeHovers.flatMap(h => h.taskIds || []));
+      const handoverCount = tasks.filter(t => hoverTaskIds.has(t.id) && t.status === 'pending' && !t.assignedTo?.includes(myName)).length;
+      const ownCount = tasks.filter(t => t.assignedTo?.includes(myName) && t.status === 'pending' && (t.freq === 'delegation' || t.parentTaskId || isTaskDueToday(t))).length;
+      return ownCount + handoverCount;
+    })(),
+    issues: issues.filter((i) => i.status !== 'resolved').length,
+    escalation: issues.filter((i) => i.priority === 'high' && i.status === 'open').length,
+    handover: handovers.filter((h) => { const t = toDay(); return h.dateStart ? (t >= h.dateStart && t <= h.dateEnd) : h.status === 'pending'; }).length,
+    delegation: delegations.filter((d) => d.status === 'pending' || d.status === 'accepted').length,
+    myDelegation: delegations.filter((d) => d.doerName === currentUser.name && (d.status === 'pending' || d.status === 'accepted')).length,
+    checklist: tasks.filter((t) => isTaskDueToday(t) && t.status === 'pending').length,
+    employees: employees.length,
+    depts: depts.length,
+  };
+
+  const chipLabel = isMain ? '👑 MAIN ADMIN' : isAdmin ? '👨‍💼 ADMIN' : '👷 STAFF';
+  const chipStyle = isDark
+    ? isMain ? { background: 'rgba(245,200,66,0.2)', color: '#f5c842', border: '1px solid rgba(245,200,66,0.35)' }
+      : isAdmin ? { background: 'rgba(20,165,171,0.2)', color: '#5eead4', border: '1px solid rgba(20,165,171,0.3)' }
+      : { background: 'rgba(29,185,84,0.15)', color: '#4ade80', border: '1px solid rgba(29,185,84,0.3)' }
+    : isMain ? { background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }
+    : isAdmin ? { background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd' }
+    : { background: '#dcfce7', color: '#166534', border: '1px solid #bbf7d0' };
+  const avStyle = isDark
+    ? isMain ? { background: 'rgba(245,200,66,0.25)', color: '#f5c842' } : isAdmin ? { background: 'rgba(20,165,171,0.25)', color: '#5eead4' } : { background: 'rgba(29,185,84,0.2)', color: '#4ade80' }
+    : isMain ? { background: '#fef3c7', color: '#92400e' } : isAdmin ? { background: '#e0f2fe', color: '#0369a1' } : { background: '#dcfce7', color: '#166534' };
+
+  const navBg = isDark ? '#0b1e3d' : '#ffffff';
+  const navBorder = isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0';
+  const navShadow = isDark ? '3px 0 20px rgba(0,0,0,0.35)' : '2px 0 12px rgba(0,0,0,0.06)';
+  const brandColor = isDark ? '#f5c842' : '#0b1e3d';
+  const groupColor = isDark ? 'rgba(255,255,255,0.3)' : '#94a3b8';
+  const itemInactiveColor = isDark ? 'rgba(255,255,255,0.6)' : '#475569';
+  const itemHoverBg = isDark ? 'rgba(255,255,255,0.07)' : '#f1f5f9';
+  const itemHoverColor = isDark ? 'white' : '#0b1e3d';
+  const footerBg = isDark ? 'rgba(255,255,255,0.05)' : '#f8fafc';
+  const footerNameColor = isDark ? 'white' : '#0b1e3d';
+  const footerDeptColor = isDark ? 'rgba(255,255,255,0.35)' : '#94a3b8';
+  const logoutColor = isDark ? 'rgba(255,255,255,0.35)' : '#94a3b8';
+  const logoutBorder = isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+
+  function NavItem({ id, label, icon, badge, perm }) {
+    if (perm && !hasPerm(perm)) return null;
+    const path = '/' + id;
+    const active = currentPath === path;
+    const cnt = badge ? badges[badge] || 0 : 0;
+    return (
+      <button
+        onClick={() => onNavigate(path)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
+          borderRadius: 8, cursor: 'pointer', border: 'none', textAlign: 'left', fontSize: 13, fontWeight: 600,
+          marginBottom: 1, transition: 'all 0.15s', position: 'relative',
+          background: active ? '#0d7377' : 'transparent',
+          color: active ? 'white' : itemInactiveColor,
+          boxShadow: active ? 'inset 3px 0 0 #14a5ab' : 'none',
+          fontFamily: "'Nunito',sans-serif",
+        }}
+        onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = itemHoverBg; e.currentTarget.style.color = itemHoverColor; } }}
+        onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = itemInactiveColor; } }}
+      >
+        <span>{icon}</span>
+        <span style={{ flex: 1 }}>{label}</span>
+        {cnt > 0 && (
+          <span style={{ background: '#ef4444', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '1px 7px', minWidth: 18, textAlign: 'center' }}>
+            {cnt}
+          </span>
+        )}
+      </button>
+    );
+  }
+
+  function Group({ label }) {
+    return <div style={{ fontSize: 9, letterSpacing: '1.8px', color: groupColor, padding: '12px 8px 4px', textTransform: 'uppercase', fontWeight: 800 }}>{label}</div>;
+  }
+
+  return (
+    <>
+      <nav className={`hops-sidebar${mobileOpen ? ' mob-open' : ''}`} style={{
+        width: 230, background: navBg, color: isDark ? 'white' : '#1e293b', display: 'flex', flexDirection: 'column',
+        position: 'fixed', height: '100vh', zIndex: 100,
+        borderRight: `1px solid ${navBorder}`,
+        boxShadow: navShadow,
+        transition: 'background 0.3s, transform 0.3s',
+      }}>
+        <div style={{ padding: '16px', borderBottom: `1px solid ${navBorder}` }}>
+          <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 15, color: brandColor, lineHeight: 1.3, marginBottom: 6 }}>🏥 Hospital Ops</h1>
+          <span style={{ display: 'inline-block', padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 800, letterSpacing: 0.7, textTransform: 'uppercase', ...chipStyle }}>
+            {chipLabel}
+          </span>
+        </div>
+
+        <div style={{ flex: 1, padding: '10px 8px', overflowY: 'auto' }}>
+          <Group label="OVERVIEW" />
+          <NavItem id="dashboard" label="Dashboard" icon="📊" />
+
+          {(isMain || isAdmin) && <>
+            {!isMain && <>
+              <Group label="MY WORK" />
+              <NavItem id="my-tasks" label="My Tasks" icon="📋" badge="myTasks" />
+              <NavItem id="my-handover" label="Incoming Handovers" icon="📥" />
+            </>}
+
+            <Group label="TASKS & CHECKLISTS" />
+            {(isMain || hasPerm('tasks_view')) && <NavItem id="tasks" label="Manage Tasks" icon="✅" badge="tasks" />}
+            {(isMain || hasPerm('checklist_view')) && <NavItem id="checklist" label="Checklists" icon="📋" badge="checklist" />}
+            <Group label="ISSUES" />
+            {(isMain || hasPerm('issues_view')) && <NavItem id="issues" label="Issues" icon="⚠️" badge="issues" />}
+            {(isMain || hasPerm('escalation_view')) && <NavItem id="escalation" label="Escalation" icon="🔺" badge="escalation" />}
+            <Group label="STAFF & DEPTS" />
+            {(isMain || hasPerm('employees_view')) && <NavItem id="employees" label="Employees" icon="👥" badge="employees" />}
+            {(isMain || hasPerm('handover_view')) && <NavItem id="handover" label="Handover Register" icon="📋" badge="handover" />}
+            {(isMain || hasPerm('departments_view')) && <NavItem id="departments" label="Departments" icon="🏢" badge="depts" />}
+            {(isMain || hasPerm('tracking_view')) && <NavItem id="tracking" label="Live Tracking" icon="📈" />}
+            {isMain && <>
+              <Group label="MAIN ADMIN" />
+              <NavItem id="activity" label="Activity Log" icon="📜" />
+              <NavItem id="mis" label="MIS Reporting" icon="📑" />
+            </>}
+            {isAdmin && hasPerm('mis_view') && <>
+              <Group label="REPORTS" />
+              <NavItem id="mis" label="MIS Reporting" icon="📑" perm="mis_view" />
+            </>}
+            <Group label="SYSTEM" />
+            {(isMain || hasPerm('trash_view')) && <NavItem id="trash" label="Trash" icon="🗑️" />}
+            <NavItem id="link-box" label="Link Box" icon="🔗" />
+            <NavItem id="settings" label="Settings" icon="⚙️" />
+          </>}
+
+          {isStaff && <>
+            <Group label="MY WORK" />
+            <NavItem id="my-tasks" label="My Tasks" icon="✅" badge="myTasks" />
+            <NavItem id="assign-task" label="Assign Task" icon="📋" />
+            <NavItem id="my-handover" label="Incoming Handovers" icon="📥" />
+            <NavItem id="my-delegation" label="My Delegations" icon="📤" badge="myDelegation" />
+            <Group label="REPORT" />
+            <NavItem id="report-issue" label="Report Problem" icon="⚠️" />
+            <NavItem id="all-issues" label="All Issues" icon="📋" badge="issues" />
+            {hasPerm('handover_view') && <NavItem id="handover" label="Handover Register" icon="🔄" badge="handover" />}
+            <Group label="TOOLS" />
+            <NavItem id="link-box" label="Link Box" icon="🔗" />
+            <NavItem id="settings" label="Settings" icon="⚙️" />
+          </>}
+        </div>
+
+        <div style={{ padding: '12px', borderTop: `1px solid ${navBorder}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 9px', borderRadius: 8, background: footerBg }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0, ...avStyle }}>
+              {currentUser.name?.charAt(0) || 'A'}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: footerNameColor }}>{currentUser.name}</div>
+              <div style={{ fontSize: 10, color: footerDeptColor }}>{currentUser.dept || 'Administrator'}</div>
+            </div>
+          </div>
+          <button onClick={logout}
+            style={{ width: '100%', marginTop: 6, padding: '7px', borderRadius: 7, border: `1px solid ${logoutBorder}`, background: 'transparent', color: logoutColor, fontFamily: "'Nunito',sans-serif", fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = isDark ? 'rgba(255,255,255,0.07)' : '#fef2f2'; e.currentTarget.style.color = isDark ? 'white' : '#ef4444'; e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.2)' : '#fecaca'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = logoutColor; e.currentTarget.style.borderColor = logoutBorder; }}>
+            ⬅ Logout
+          </button>
+        </div>
+      </nav>
+
+      {/* Toast stack — above theme toggle */}
+      {toasts.length > 0 && (
+        <div style={{ position: 'fixed', bottom: 72, right: 24, zIndex: 99999, display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'flex-end', maxHeight: 'calc(100vh - 130px)', background: 'transparent' }}>
+          {/* Scrollable list */}
+          <div ref={listRef} style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end', scrollBehavior: 'smooth', background: 'transparent' }}>
+            {toasts.map((t, i) => {
+              // Newest items at end of array → lowest stagger → appear first
+              const newBatchStart = Math.max(0, toasts.length - prevToastLen.current);
+              const posInBatch = i - (toasts.length - newBatchStart);
+              const stagger = posInBatch >= 0 ? posInBatch * 100 : 0;
+              const exiting = exitingIds.has(t.id);
+              if (t.type === 'assigned')
+                return <AssignedToast key={t.id} task={t.task} createdAt={t.createdAt} onDismiss={() => dismissToast(t.id)} isDark={isDark} index={stagger} exiting={exiting} />;
+              if (t.type === 'handover_request')
+                return <HandoverRequestToast key={t.id} handover={t.handover} createdAt={t.createdAt} onDismiss={() => dismissToast(t.id)} isDark={isDark} index={stagger} exiting={exiting} />;
+              if (t.type === 'handover_response')
+                return <HandoverResponseToast key={t.id} handover={t.handover} createdAt={t.createdAt} onDismiss={() => dismissToast(t.id)} isDark={isDark} index={stagger} exiting={exiting} />;
+              return <ReminderToast key={t.id} task={t.task} subtype={t.subtype} createdAt={t.createdAt} onDismiss={() => dismissToast(t.id)} isDark={isDark} index={stagger} exiting={exiting} />;
+            })}
+          </div>
+          {/* Fixed Clear All — disappears as soon as last notification exits */}
+          {toasts.length > 1 && (
+            <button onClick={clearAllAnimated} style={{
+              width: 340, padding: '9px 0', borderRadius: 10, flexShrink: 0,
+              marginTop: 8,
+              background: isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2',
+              border: `1px solid ${isDark ? 'rgba(239,68,68,0.3)' : '#fecaca'}`,
+              color: '#ef4444', fontFamily: "'Nunito',sans-serif",
+              fontSize: 12.5, fontWeight: 800, cursor: 'pointer',
+            }}>
+              🗑 Clear All ({toasts.length})
+            </button>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ── Timestamp helper ─────────────────────────────────────────────────────────
+function fTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
+}
+
+// ── Shared slide-in wrapper ───────────────────────────────────────────────────
+function ToastShell({ isDark, urgent, children, onClose, index = 0, exiting = false, accentColor }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 10 + index);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (exiting) setVisible(false);
+  }, [exiting]);
+  function close() { setVisible(false); setTimeout(onClose, 320); }
+
+  const border = accentColor
+    ? (isDark ? `${accentColor}55` : `${accentColor}44`)
+    : urgent
+      ? (isDark ? 'rgba(239,68,68,0.4)' : '#fca5a5')
+      : (isDark ? 'rgba(255,255,255,0.12)' : '#e2e8f0');
+
+  const barGradient = accentColor
+    ? `linear-gradient(90deg,${accentColor},${accentColor}cc)`
+    : urgent
+      ? 'linear-gradient(90deg,#dc2626,#ef4444)'
+      : 'linear-gradient(90deg,#0d7377,#14a5ab)';
+
+  return (
+    <div style={{
+      width: 340, borderRadius: 14,
+      background: isDark ? '#0f2240' : '#ffffff',
+      border: `1px solid ${border}`,
+      boxShadow: 'none',
+      overflow: 'hidden', fontFamily: "'Nunito',sans-serif",
+      transform: visible ? 'translateX(0)' : 'translateX(110%)',
+      opacity: visible ? 1 : 0,
+      transition: 'transform 0.25s cubic-bezier(.22,1,.36,1), opacity 0.25s ease',
+      flexShrink: 0,
+    }}>
+      <div style={{ height: 3, background: barGradient }} />
+      {children(close, isDark)}
+    </div>
+  );
+}
+
+// ── Assignment toast (green, one-time) ───────────────────────────────────────
+function AssignedToast({ task, createdAt, onDismiss, isDark, index, exiting }) {
+  const titleColor = isDark ? '#ffffff' : '#0b1e3d';
+  const subColor   = isDark ? 'rgba(255,255,255,0.5)' : '#6b7a90';
+  const metaBg     = isDark ? 'rgba(255,255,255,0.05)' : '#f3f7fc';
+
+  return (
+    <ToastShell isDark={isDark} urgent={false} onClose={onDismiss} index={index} exiting={exiting}>
+      {(close) => (
+        <>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 14px 8px', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#1a7a4a,#27ae60)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>📋</div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#1a7a4a', letterSpacing: 1, textTransform: 'uppercase' }}>New Task Assigned</span>
+                  {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: titleColor, lineHeight: 1.3 }}>{task.name}</div>
+              </div>
+            </div>
+            <button onClick={close} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`, background: 'transparent', cursor: 'pointer', color: subColor, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px', flexWrap: 'wrap' }}>
+            {task.dept && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>🏢 {task.dept}</span>}
+            {task.schedDate && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>📅 {task.schedDate}</span>}
+            {task.time && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>⏰ {task.time}</span>}
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: task.priority === 'high' ? '#ef4444' : task.priority === 'medium' ? '#d4920a' : '#0d7377', background: task.priority === 'high' ? '#fef2f2' : task.priority === 'medium' ? '#fffbeb' : '#f0fdf4', padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase' }}>{task.priority || 'medium'}</span>
+          </div>
+        </>
+      )}
+    </ToastShell>
+  );
+}
+
+// ── Reminder toast (per-task, repeating) ─────────────────────────────────────
+function ReminderToast({ task, subtype = 'regular', createdAt, onDismiss, isDark, index, exiting }) {
+  const today      = toDay();
+  const isOverdue  = task.schedDate && task.schedDate < today;
+  const hasDueTime = task.schedDate === today && task.time;
+  const urgent     = isOverdue || !!hasDueTime;
+  const isHandover = subtype === 'handover';
+  const isDelegation = subtype === 'delegation';
+
+  const titleColor = isDark ? '#ffffff' : '#0b1e3d';
+  const subColor   = isDark ? 'rgba(255,255,255,0.5)' : '#6b7a90';
+  const metaBg     = isDark ? 'rgba(255,255,255,0.05)' : '#f3f7fc';
+  const urgentMetaBg = isDark ? 'rgba(239,68,68,0.1)' : '#fff5f5';
+
+  // When urgent: always red. Non-urgent: handover=purple, delegation=orange, regular=teal.
+  const accentColor = urgent ? '#dc2626' : isHandover ? '#7c3aed' : isDelegation ? '#d97706' : '#0d7377';
+
+  const iconGradient = urgent
+    ? 'linear-gradient(135deg,#dc2626,#ef4444)'
+    : isHandover
+      ? 'linear-gradient(135deg,#6d28d9,#7c3aed)'
+      : isDelegation
+        ? 'linear-gradient(135deg,#b45309,#d97706)'
+        : 'linear-gradient(135deg,#0d7377,#14a5ab)';
+
+  const typeLabel = isHandover ? 'Handover' : isDelegation ? 'Delegation' : null;
+  const headerLabel = isOverdue
+    ? (typeLabel ? `Overdue ${typeLabel}` : 'Overdue Task')
+    : hasDueTime
+      ? (typeLabel ? `Due Today · ${typeLabel}` : 'Due Today')
+      : (typeLabel ? `${typeLabel} Task` : 'Task Reminder');
+
+  const icon = isOverdue ? '🚨' : hasDueTime ? '⏰' : isHandover ? '🔄' : isDelegation ? '📤' : '⏳';
+
+  const nameColor = urgent ? (isDark ? '#fca5a5' : '#991b1b') : titleColor;
+
+  return (
+    <ToastShell isDark={isDark} urgent={urgent} onClose={onDismiss} index={index} exiting={exiting}
+      accentColor={urgent ? undefined : isHandover ? '#7c3aed' : isDelegation ? '#d97706' : undefined}>
+      {(close) => (
+        <>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 14px 8px', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: iconGradient, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                {icon}
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: accentColor, letterSpacing: 1, textTransform: 'uppercase' }}>{headerLabel}</span>
+                  {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: nameColor, lineHeight: 1.3 }}>{task.name}</div>
+              </div>
+            </div>
+            <button onClick={close} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`, background: 'transparent', cursor: 'pointer', color: subColor, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px', flexWrap: 'wrap' }}>
+            {task.dept && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>🏢 {task.dept}</span>}
+            {isOverdue && !isHandover && <span style={{ fontSize: 10.5, background: urgentMetaBg, color: '#dc2626', padding: '3px 8px', borderRadius: 20, fontWeight: 800 }}>📅 OVERDUE — {task.schedDate}</span>}
+            {(!isOverdue || isHandover) && task.schedDate && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>📅 {task.schedDate}</span>}
+            {task.time && <span style={{ fontSize: 10.5, background: isOverdue && !isHandover ? urgentMetaBg : metaBg, color: isOverdue && !isHandover ? '#dc2626' : subColor, padding: '3px 8px', borderRadius: 20, fontWeight: isOverdue ? 800 : 700 }}>⏰ {task.time}</span>}
+            <span style={{ fontSize: 10.5, fontWeight: 800, color: task.priority === 'high' ? '#ef4444' : task.priority === 'medium' ? '#d4920a' : '#0d7377', background: task.priority === 'high' ? '#fef2f2' : task.priority === 'medium' ? '#fffbeb' : '#f0fdf4', padding: '3px 8px', borderRadius: 20, textTransform: 'uppercase' }}>{task.priority || 'medium'}</span>
+          </div>
+        </>
+      )}
+    </ToastShell>
+  );
+}
+
+// ── Handover Request toast (yellow, for toName — new incoming request) ────────
+function HandoverRequestToast({ handover: hv, createdAt, onDismiss, isDark, index, exiting }) {
+  const subColor = isDark ? 'rgba(255,255,255,0.5)' : '#6b7a90';
+  const metaBg   = isDark ? 'rgba(255,255,255,0.05)' : '#f3f7fc';
+  const titleColor = isDark ? '#ffffff' : '#0b1e3d';
+
+  return (
+    <ToastShell isDark={isDark} urgent={false} onClose={onDismiss} index={index} exiting={exiting} accentColor="#d97706">
+      {(close) => (
+        <>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 14px 8px', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#b45309,#d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>🔔</div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#d97706', letterSpacing: 1, textTransform: 'uppercase' }}>Handover Request</span>
+                  {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: titleColor, lineHeight: 1.3 }}>
+                  {hv.fromName} ne tasks handover kiye hain
+                </div>
+              </div>
+            </div>
+            <button onClick={close} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`, background: 'transparent', cursor: 'pointer', color: subColor, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px', flexWrap: 'wrap' }}>
+            {hv.dept && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>🏢 {hv.dept}</span>}
+            {hv.dateStart && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>📅 {hv.dateStart} → {hv.dateEnd}</span>}
+            <span style={{ fontSize: 10.5, background: isDark ? 'rgba(217,119,6,0.15)' : '#fffbeb', color: '#d97706', padding: '3px 8px', borderRadius: 20, fontWeight: 800 }}>
+              📋 {(hv.taskIds || []).length} Tasks
+            </span>
+          </div>
+        </>
+      )}
+    </ToastShell>
+  );
+}
+
+// ── Handover Response toast (green/red, for fromName — accepted or rejected) ──
+function HandoverResponseToast({ handover: hv, createdAt, onDismiss, isDark, index, exiting }) {
+  const accepted   = hv.status === 'accepted';
+  const subColor   = isDark ? 'rgba(255,255,255,0.5)' : '#6b7a90';
+  const metaBg     = isDark ? 'rgba(255,255,255,0.05)' : '#f3f7fc';
+  const titleColor = isDark ? '#ffffff' : '#0b1e3d';
+  const accent     = accepted ? '#16a34a' : '#dc2626';
+  const iconGrad   = accepted ? 'linear-gradient(135deg,#15803d,#16a34a)' : 'linear-gradient(135deg,#b91c1c,#dc2626)';
+
+  return (
+    <ToastShell isDark={isDark} urgent={!accepted} onClose={onDismiss} index={index} exiting={exiting}
+      accentColor={accepted ? '#16a34a' : undefined}>
+      {(close) => (
+        <>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '12px 14px 8px', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: iconGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                {accepted ? '✅' : '❌'}
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 1, textTransform: 'uppercase' }}>
+                    Handover {accepted ? 'Accepted' : 'Rejected'}
+                  </span>
+                  {createdAt && <span style={{ fontSize: 9.5, color: subColor, fontWeight: 600 }}>· {fTime(createdAt)}</span>}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: accepted ? titleColor : (isDark ? '#fca5a5' : '#991b1b'), lineHeight: 1.3 }}>
+                  {hv.toName} ne handover {accepted ? 'accept' : 'reject'} kar diya
+                </div>
+              </div>
+            </div>
+            <button onClick={close} style={{ width: 26, height: 26, borderRadius: 7, border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`, background: 'transparent', cursor: 'pointer', color: subColor, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>✕</button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, padding: '0 14px 12px', flexWrap: 'wrap' }}>
+            {hv.dept && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>🏢 {hv.dept}</span>}
+            {hv.dateStart && <span style={{ fontSize: 10.5, background: metaBg, color: subColor, padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>📅 {hv.dateStart} → {hv.dateEnd}</span>}
+            {!accepted && hv.remark && <span style={{ fontSize: 10.5, background: isDark ? 'rgba(239,68,68,0.1)' : '#fff5f5', color: '#dc2626', padding: '3px 8px', borderRadius: 20, fontWeight: 700 }}>💬 {hv.remark}</span>}
+          </div>
+        </>
+      )}
+    </ToastShell>
+  );
+}
