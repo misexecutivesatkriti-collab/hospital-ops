@@ -45,16 +45,34 @@ export default function Staff() {
   });
   const paged = paginate(filtered, page);
 
-  function openNew() { setForm({ name: '', dept: '', role: '', contact: '', email: '', password: '' }); setPerms([]); setEditEmp(null); setShowForm(true); }
-  function openEdit(e) { setForm({ name: e.name, dept: e.dept, role: e.role || '', contact: e.contact || '', email: e.email || '', password: e.password || '' }); setPerms(e.perms || []); setEditEmp(e); setShowForm(true); }
+  function openNew() { setForm({ name: '', dept: '', role: '', isIncharge: false, contact: '', email: '', password: '' }); setPerms([]); setEditEmp(null); setShowForm(true); }
+  function openEdit(e) { setForm({ name: e.name, dept: e.dept, role: e.role || '', isIncharge: e.isIncharge || false, contact: e.contact || '', email: e.email || '', password: e.password || '' }); setPerms(e.perms || []); setEditEmp(e); setShowForm(true); }
 
   async function handleSave() {
-    if (!form.name.trim() || !form.dept) { alert('Name and Department required!'); return; }
-    if (!editEmp && !form.password.trim()) { alert('Password required for new staff!'); return; }
-    const obj = { id: editEmp?.id || uid(), name: form.name.toUpperCase().trim(), dept: form.dept, role: form.role.toUpperCase(), contact: form.contact, email: form.email, password: form.password || editEmp?.password || '', perms };
+    if (!form.name.trim() || !form.dept) { alert('Name and Department are required!'); return; }
+    if (!editEmp && !form.password.trim()) { alert('Password is required for new staff!'); return; }
+    const obj = { id: editEmp?.id || uid(), name: form.name.toUpperCase().trim(), dept: form.dept, role: editEmp?.role || '', isIncharge: form.isIncharge, contact: form.contact, email: form.email, password: form.password || editEmp?.password || '', perms };
     const isNew = !editEmp;
     const newEmps = editEmp ? employees.map((e) => e.id === obj.id ? obj : e) : [...employees, obj];
     await save('hops-employees', newEmps);
+
+    // Sync isIncharge → department's hod field
+    if (form.isIncharge) {
+      // Set as incharge of their dept; clear them from any other dept they may have been incharge of
+      const updatedDepts = depts.map(d => {
+        if (d.name === obj.dept) return { ...d, hod: obj.name };
+        if ((d.hod || '').toUpperCase() === obj.name) return { ...d, hod: '' };
+        return d;
+      });
+      await save('hops-depts', updatedDepts);
+    } else {
+      // Unchecked — remove this employee as incharge from whichever dept had them
+      const hadDept = depts.find(d => (d.hod || '').toUpperCase() === obj.name);
+      if (hadDept) {
+        await save('hops-depts', depts.map(d => (d.hod || '').toUpperCase() === obj.name ? { ...d, hod: '' } : d));
+      }
+    }
+
     await logAct(editEmp ? 'EMPLOYEE UPDATED' : 'EMPLOYEE ADDED', obj.name);
     if (isNew && obj.email) sendWelcomeEmail(obj);
     setShowForm(false);
@@ -79,20 +97,40 @@ export default function Staff() {
         </select>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 14 }}>
         {paged.items.length ? paged.items.map((e) => (
-          <div key={e.id} style={{ background: 'white', borderRadius: 12, border: '1px solid #d8e2ef', padding: 16, position: 'relative' }}>
-            <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#e8f4fd', color: '#0d7377', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18, marginBottom: 10 }}>
-              {e.name.charAt(0)}
+          <div key={e.id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e0e8f0', overflow: 'hidden', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
+            {/* Header */}
+            <div style={{ background: e.isIncharge ? 'linear-gradient(135deg,#1a7a4a 0%,#155d38 100%)' : 'linear-gradient(135deg,#0d7377 0%,#0b5e62 100%)', padding: '16px 16px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 17, color: 'white', flexShrink: 0 }}>
+                {e.name.charAt(0)}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 13, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.name}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', marginTop: 2, fontWeight: 700, letterSpacing: 0.5 }}>
+                  {e.isIncharge ? '★ DEPT. INCHARGE' : 'STAFF'}
+                </div>
+              </div>
             </div>
-            <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 3 }}>{e.name}</div>
-            <div style={{ fontSize: 11, color: '#6b7a90', marginBottom: 2 }}>👔 {e.role || '—'}</div>
-            <div style={{ fontSize: 11, color: '#6b7a90', marginBottom: 2 }}>🏢 {e.dept || '—'}</div>
-            {e.contact && <div style={{ fontSize: 11, color: '#6b7a90' }}>📞 {e.contact}</div>}
+            {/* Body */}
+            <div style={{ padding: '12px 14px 4px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, fontWeight: 700, marginBottom: 5, color: e.dept ? '#334155' : '#b0bec5' }}>
+                <span style={{ color: e.dept ? '#0d7377' : '#b0bec5' }}>🏢</span>
+                {e.dept || <span style={{ fontStyle: 'italic', fontWeight: 500, fontSize: 11, color: '#e07b00' }}>⚠ Missing dept</span>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, marginBottom: 4, color: e.contact ? '#6b7a90' : '#b0bec5' }}>
+                <span>📞</span>
+                {e.contact || <span style={{ fontStyle: 'italic', fontSize: 11, color: '#e07b00' }}>⚠ No contact</span>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: e.email ? '#6b7a90' : '#b0bec5' }}>
+                <span>✉️</span>
+                {e.email || <span style={{ fontStyle: 'italic', fontSize: 11, color: '#e07b00' }}>⚠ No email</span>}
+              </div>
+            </div>
             {canEdit && (
-              <div style={{ display: 'flex', gap: 5, marginTop: 12 }}>
-                <button onClick={() => openEdit(e)} style={{ flex: 1, padding: '5px 0', borderRadius: 7, background: '#e8f4fd', color: '#0d7377', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 11 }}>✏️ Edit</button>
-                <button onClick={async () => { if (confirm('Remove employee?')) { await moveToTrash('employee', e.id); } }} style={{ padding: '5px 9px', borderRadius: 7, background: 'transparent', border: '1px solid #d8e2ef', cursor: 'pointer', fontSize: 12 }}>🗑️</button>
+              <div style={{ display: 'flex', gap: 6, padding: '10px 12px 12px' }}>
+                <button onClick={() => openEdit(e)} style={{ flex: 1, padding: '7px 0', borderRadius: 8, background: '#f0f7ff', color: '#0d7377', border: '1px solid #cce0f0', cursor: 'pointer', fontWeight: 700, fontSize: 12 }}>✏️ Edit</button>
+                <button onClick={async () => { if (confirm('Remove employee?')) { await moveToTrash('employee', e.id); } }} style={{ padding: '7px 12px', borderRadius: 8, background: 'transparent', border: '1px solid #e0e8f0', cursor: 'pointer', fontSize: 13, color: '#94a3b8' }}>🗑️</button>
               </div>
             )}
           </div>
@@ -104,16 +142,18 @@ export default function Staff() {
         <Field label="Full Name *">
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="EMPLOYEE NAME" style={IS} autoFocus />
         </Field>
+        <Field label="Department *">
+          <select value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })} style={IS}>
+            <option value="">Select...</option>
+            {depts.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
+          </select>
+        </Field>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 13px', borderRadius: 8, border: `1.5px solid ${form.isIncharge ? '#1a7a4a' : '#d8e2ef'}`, background: form.isIncharge ? '#f0fdf4' : '#f8fbff', cursor: 'pointer', userSelect: 'none', marginBottom: 10 }}>
+          <input type="checkbox" checked={form.isIncharge} onChange={e => setForm({ ...form, isIncharge: e.target.checked })} style={{ width: 15, height: 15, accentColor: '#1a7a4a', cursor: 'pointer', flexShrink: 0 }} />
+          <div style={{ fontSize: 12, fontWeight: 800, color: form.isIncharge ? '#1a7a4a' : '#6b7a90' }}>★ Mark as Department Incharge</div>
+          <div style={{ marginLeft: 'auto', fontSize: 10, color: '#6b7a90' }}>This employee heads the department</div>
+        </label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Field label="Department *">
-            <select value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })} style={IS}>
-              <option value="">Select...</option>
-              {depts.map((d) => <option key={d.id} value={d.name}>{d.name}</option>)}
-            </select>
-          </Field>
-          <Field label="Role / Designation">
-            <input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="NURSE / WARD BOY..." style={IS} />
-          </Field>
           <Field label="Contact Number">
             <input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="PHONE" style={IS} />
           </Field>

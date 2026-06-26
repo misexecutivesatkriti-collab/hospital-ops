@@ -9,8 +9,8 @@ const TABLES = {
   },
   'hops-employees': {
     table: 'employees',
-    pack: (o) => ({ id: o.id, name: o.name || '', username: o.username || o.name || '', dept: o.dept || '', designation: o.role || o.designation || '', email: o.email || '', password: o.password || '', contact: o.contact || '', perms: o.perms || [] }),
-    unpack: (r) => ({ id: r.id, name: r.name || '', username: r.username || r.name || '', dept: r.dept || '', role: r.designation || '', designation: r.designation || '', email: r.email || '', password: r.password || '', contact: r.contact || '', perms: Array.isArray(r.perms) ? r.perms : [] }),
+    pack: (o) => ({ id: o.id, name: o.name || '', username: o.username || o.name || '', dept: o.dept || '', designation: o.role || o.designation || '', email: o.email || '', password: o.password || '', contact: o.contact || '', perms: o.perms || [], is_incharge: o.isIncharge || false }),
+    unpack: (r) => ({ id: r.id, name: r.name || '', username: r.username || r.name || '', dept: r.dept || '', role: r.designation || '', designation: r.designation || '', email: r.email || '', password: r.password || '', contact: r.contact || '', perms: Array.isArray(r.perms) ? r.perms : [], isIncharge: r.is_incharge || false }),
   },
   'hops-admins': {
     table: 'admins',

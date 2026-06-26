@@ -174,6 +174,13 @@ CREATE TABLE IF NOT EXISTS user_links (
 CREATE INDEX IF NOT EXISTS idx_links_username ON user_links(username);
 
 -- ============================================================
+-- MIGRATIONS — Run these if tables already exist (adds missing columns)
+-- ============================================================
+ALTER TABLE departments ADD COLUMN IF NOT EXISTS head TEXT DEFAULT '';
+ALTER TABLE employees   ADD COLUMN IF NOT EXISTS is_incharge BOOLEAN DEFAULT false;
+ALTER TABLE employees   ADD COLUMN IF NOT EXISTS perms JSONB DEFAULT '[]';
+
+-- ============================================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- Using service_role key from frontend — RLS is enforced at DB level
 -- For production, switch to anon key + RLS policies below
