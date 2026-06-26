@@ -70,7 +70,6 @@ export default function Departments() {
           const dDone = tasks.filter((t) => t.dept === d.name && t.status === 'done').length;
           const dIssues = issues.filter((i) => i.dept === d.name && i.status !== 'resolved').length;
           const pct = dTasks ? Math.round(dDone / dTasks * 100) : 100;
-          const inchargeEmp = d.hod ? employees.find(e => e.name.toUpperCase() === d.hod.toUpperCase()) : null;
           return (
             <div key={d.id} style={{ background: 'white', borderRadius: 14, border: '1px solid #e0e8f0', overflow: 'hidden', boxShadow: '0 1px 4px rgba(11,30,61,0.06)' }}>
               {/* Header band */}
@@ -89,7 +88,6 @@ export default function Departments() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, fontWeight: 800, color: '#0b1e3d', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.hod}</div>
-                      {inchargeEmp?.role && <div style={{ fontSize: 10.5, color: '#6b7a90', marginTop: 1 }}>{inchargeEmp.role}</div>}
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 700, color: '#1a7a4a', background: '#d4edda', padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>Incharge</span>
                   </div>

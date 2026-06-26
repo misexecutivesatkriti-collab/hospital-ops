@@ -51,7 +51,7 @@ export default function Staff() {
   async function handleSave() {
     if (!form.name.trim() || !form.dept) { alert('Name and Department are required!'); return; }
     if (!editEmp && !form.password.trim()) { alert('Password is required for new staff!'); return; }
-    const obj = { id: editEmp?.id || uid(), name: form.name.toUpperCase().trim(), dept: form.dept, role: editEmp?.role || '', isIncharge: form.isIncharge, contact: form.contact, email: form.email, password: form.password || editEmp?.password || '', perms };
+    const obj = { id: editEmp?.id || uid(), name: form.name.toUpperCase().trim(), dept: form.dept, role: form.isIncharge ? 'INCHARGE' : 'STAFF', isIncharge: form.isIncharge, contact: form.contact, email: form.email, password: form.password || editEmp?.password || '', perms };
     const isNew = !editEmp;
     const newEmps = editEmp ? employees.map((e) => e.id === obj.id ? obj : e) : [...employees, obj];
     await save('hops-employees', newEmps);
