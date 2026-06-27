@@ -365,6 +365,7 @@ export default function Tasks() {
   const [tab, setTab] = useState('mine');
   const [showExport, setShowExport] = useState(false);
   const [page, setPage] = useState(1);
+  const [confirmDelete, setConfirmDelete] = useState(null); // task to delete
 
   const isMain = currentRole === 'mainadmin';
   const canSeeAll = isMain || hasPerm('all_task_details');
@@ -479,13 +480,20 @@ export default function Tasks() {
   }
 
   async function handleDelete(task) {
-    if (!confirm(`Move '${task.name}' to Trash?`)) return;
-    // Delete child tasks (cycle children) first so they don't linger in the list
-    const children = tasks.filter(t => t.parentTaskId === task.id);
-    for (const child of children) {
-      await moveToTrash('task', child.id);
+    setConfirmDelete(task);
+  }
+
+  async function confirmDeleteNow() {
+    const task = confirmDelete;
+    setConfirmDelete(null);
+    if (!task) return;
+    // Find root of this task family (in case we're deleting a child)
+    const rootId = task.parentTaskId || task.id;
+    // Delete entire family: root + all children
+    const family = tasks.filter(t => t.id === rootId || t.parentTaskId === rootId);
+    for (const t of family) {
+      await moveToTrash('task', t.id);
     }
-    await moveToTrash('task', task.id);
   }
 
   async function handleExtDecide(task, extId, decision, decidedBy) {
@@ -639,6 +647,26 @@ export default function Tasks() {
           <Pagination {...paged} onPage={(p) => setPage(p)} />
         </div>
       </div>
+
+      {/* In-app delete confirmation — avoids browser popup blocking */}
+      {confirmDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: 'white', borderRadius: 14, padding: 28, maxWidth: 400, width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 10 }}>🗑️</div>
+            <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 16, color: '#0b1e3d', margin: '0 0 8px' }}>Delete Task?</h3>
+            <p style={{ fontSize: 13, color: '#4a5568', marginBottom: 6 }}>
+              <strong>{confirmDelete.name}</strong>
+            </p>
+            <p style={{ fontSize: 12, color: '#c0392b', fontWeight: 700, marginBottom: 20 }}>
+              This will move the task and all its history records to Trash.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={confirmDeleteNow} style={{ padding: '9px 24px', borderRadius: 8, background: '#c0392b', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>🗑️ Delete</button>
+              <button onClick={() => setConfirmDelete(null)} style={{ padding: '9px 20px', borderRadius: 8, background: 'transparent', color: '#0d7377', border: '1.5px solid #0d7377', cursor: 'pointer', fontWeight: 800, fontSize: 13 }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <TaskFormModal open={showForm} onClose={() => { setShowForm(false); setEditTask(null); }} onSave={handleSave} editTask={editTask} depts={depts} employees={employees} />
       <TaskDetailModal task={showDetail} open={!!showDetail} onClose={() => setShowDetail(null)} onDone={(t) => setShowDone(t)} canEdit={showDetail ? canEditRow(showDetail) : false} onEdit={(t) => { setShowDetail(null); setEditTask(t); setShowForm(true); }} onDelete={handleDelete} currentUser={currentUser} currentRole={currentRole} />
