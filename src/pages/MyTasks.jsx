@@ -197,7 +197,8 @@ export default function MyTasks() {
     t.status === 'done' &&
     t.freq === 'daily' &&
     t.lastDone < today &&
-    !tasks.some(x => x.parentTaskId === t.id && x.status === 'pending')
+    !tasks.some(x => x.parentTaskId === t.id && x.status === 'pending') &&
+    !tasks.some(x => x.parentTaskId === t.id && x.status === 'done' && x.lastDone === today)
   ).map(t => ({ ...t, _virtualPending: true }));
   const handoverPending = [...handoverPendingReal, ...handoverVirtualPending];
 
@@ -210,7 +211,8 @@ export default function MyTasks() {
     t.lastDone !== today &&
     isTaskDueToday(t) &&
     (t.assignedTo?.includes(currentUser.name) || t.doneBy === currentUser.name) &&
-    !tasks.some(x => x.parentTaskId === t.id && x.status === 'pending' && x.assignedTo?.includes(currentUser.name))
+    !tasks.some(x => x.parentTaskId === t.id && x.status === 'pending' && x.assignedTo?.includes(currentUser.name)) &&
+    !tasks.some(x => x.parentTaskId === t.id && x.status === 'done' && x.lastDone === today)
   ).map(t => ({ ...t, _virtualPending: true }));
 
   // Deduplicate: children (with parentTaskId) take priority over parents
