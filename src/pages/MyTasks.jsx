@@ -243,12 +243,29 @@ export default function MyTasks() {
   // Handover FROM others TO me (tasks received)
   const handoverFromTasks = handoverPending;
 
+  // Pending incoming handovers waiting for MY acceptance (not yet accepted/rejected)
+  const pendingIncomingHandovers = handovers.filter(h =>
+    (h.toName || '').toUpperCase() === myName &&
+    h.status === 'pending'
+  );
+
   // Handover TO others FROM me (handovers I created — all statuses)
   const handoverToList = handovers.filter(h =>
     (h.fromName || '').toUpperCase() === myName
   ).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
 
-  const handoverCount = handoverFromTasks.length + handoverToList.length;
+  const handoverCount = handoverFromTasks.length + handoverToList.length + pendingIncomingHandovers.length;
+
+  async function handleAcceptHandover(h) {
+    await save('hops-handovers', handovers.map(x => x.id === h.id ? { ...x, status: 'accepted', acceptedAt: new Date().toISOString() } : x));
+    await logAct('HANDOVER ACCEPTED', `From: ${h.fromName} | ${(h.taskIds || []).length} tasks | ${h.dateStart} to ${h.dateEnd}`);
+  }
+
+  async function handleRejectHandover(h) {
+    if (!window.confirm(`Reject handover from ${h.fromName}?`)) return;
+    await save('hops-handovers', handovers.map(x => x.id === h.id ? { ...x, status: 'rejected' } : x));
+    await logAct('HANDOVER REJECTED', `From: ${h.fromName}`);
+  }
 
   // Done: ALL tasks I completed or were assigned to me (tasks + delegation + handover all combined)
   const myDone = tasks.filter(t =>
@@ -562,6 +579,44 @@ export default function MyTasks() {
 
       {tab === 'handover' && (
         <div>
+          {/* Pending incoming handovers — awaiting my Accept/Reject */}
+          {pendingIncomingHandovers.length > 0 && (
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#0b1e3d', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                🔔 Pending Handover Requests
+                <span style={{ background: '#ef4444', color: 'white', borderRadius: 20, fontSize: 10, fontWeight: 800, padding: '2px 8px' }}>{pendingIncomingHandovers.length} awaiting</span>
+              </div>
+              {pendingIncomingHandovers.map(h => {
+                const hTasks = tasks.filter(t => (h.taskIds || []).includes(t.id));
+                return (
+                  <div key={h.id} style={{ background: '#fff7ed', borderRadius: 11, border: '2px solid #f5c842', padding: '14px 16px', marginBottom: 10, borderLeft: '4px solid #d4920a' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                      <div style={{ fontWeight: 800, fontSize: 13 }}>From: <span style={{ color: '#d4920a' }}>{h.fromName}</span></div>
+                      <span style={{ background: '#fff3cd', color: '#7a4800', padding: '3px 10px', borderRadius: 20, fontSize: 10.5, fontWeight: 800 }}>⏳ PENDING YOUR ACCEPTANCE</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: '#6b7a90', marginBottom: 8 }}>
+                      📅 Valid: {fDate(h.dateStart)} → {fDate(h.dateEnd)}
+                      {h.dept && <span style={{ marginLeft: 12 }}>🏢 {h.dept}</span>}
+                    </div>
+                    {hTasks.length > 0 && (
+                      <div style={{ background: 'white', border: '1px solid #f5c842', borderRadius: 7, padding: '7px 10px', marginBottom: 10 }}>
+                        <div style={{ fontSize: 10, fontWeight: 800, color: '#6b7a90', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Tasks ({hTasks.length})</div>
+                        {hTasks.map(t => (
+                          <div key={t.id} style={{ fontSize: 12, color: '#1a2535', padding: '3px 0', borderBottom: '1px solid #f3f7fc' }}>• {t.name}</div>
+                        ))}
+                      </div>
+                    )}
+                    {h.notes && <div style={{ fontSize: 12, color: '#6b7a90', marginBottom: 10, fontStyle: 'italic' }}>📝 {h.notes}</div>}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => handleAcceptHandover(h)} style={{ padding: '8px 18px', borderRadius: 8, background: '#1a7a4a', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>✅ Accept</button>
+                      <button onClick={() => handleRejectHandover(h)} style={{ padding: '8px 14px', borderRadius: 8, background: 'transparent', color: '#c0392b', border: '1.5px solid #f87171', cursor: 'pointer', fontWeight: 800, fontSize: 12 }}>❌ Reject</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Handover From — tasks received by me */}
           <div style={{ marginBottom: 22 }}>
             <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 14, color: '#0b1e3d', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>

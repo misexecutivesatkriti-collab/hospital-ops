@@ -221,7 +221,14 @@ function TaskFormModal({ open, onClose, onSave, editTask, depts, employees }) {
           </select>
         </Field>
         <Field label="Frequency">
-          <select value={form.freq} onChange={(e) => setForm({ ...form, freq: e.target.value })} style={IS}>
+          <select value={form.freq} onChange={(e) => {
+            const freq = e.target.value;
+            setForm(f => ({
+              ...f, freq,
+              // Auto-fill today's date for daily tasks if not already set
+              schedDate: freq === 'daily' && !f.schedDate ? toDay() : f.schedDate,
+            }));
+          }} style={IS}>
             {FREQ_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </Field>
@@ -473,6 +480,11 @@ export default function Tasks() {
 
   async function handleDelete(task) {
     if (!confirm(`Move '${task.name}' to Trash?`)) return;
+    // Delete child tasks (cycle children) first so they don't linger in the list
+    const children = tasks.filter(t => t.parentTaskId === task.id);
+    for (const child of children) {
+      await moveToTrash('task', child.id);
+    }
     await moveToTrash('task', task.id);
   }
 
